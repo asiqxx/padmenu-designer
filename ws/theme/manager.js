@@ -24,14 +24,20 @@ var ThemeManager = function($viewContainer, themes) {
 			'type' : 'class',
 			'value' : 'icon-icomoon-plus3',
 			'click' : function() {
+				var templateName = 'A';
+				var templateNameCharCode = 65;
+				while(self.getTemplate(templateName)) {
+					templateName = String.fromCharCode(++templateNameCharCode);
+				}
 				var template = {
-					name : 'template',
+					name : templateName,
 					width : theme.width,
 					height : theme.height,
 					bg : 'transparent',
 				};
-				self.addTemplate(template).triggerHandler('click');
-				
+				self.addTemplate(template);
+				self.selectTemplate(template.name);
+				self.openTemplate(template.name);
 			}
 		}, {
 			'name' : 'remove',
@@ -46,8 +52,7 @@ var ThemeManager = function($viewContainer, themes) {
 	var themeChangeEventListeners = [];
     function fireThemeChangeEvent() {
 		for (var i in themeChangeEventListeners) {
-			themeChangeEventListeners[i]
-				.onThemeChange(theme);
+			themeChangeEventListeners[i].onThemeChange(theme);
 		}
     }
     var changeEventListeners = [];
@@ -69,9 +74,10 @@ var ThemeManager = function($viewContainer, themes) {
 	this.getTheme = function() {
 		return theme;
 	};
-	this.selectTemplate = function(template) {
+	
+	this.selectTemplate = function(name) {
 		var $templateView = $templateContainer.children().filter(function(i, element) {
-			return $(element).data('template') === template;
+			return $(element).data('template').name === name;
 		});
 		if ($selectedTemplateView) {
 			$selectedTemplateView.removeClass(
@@ -87,12 +93,15 @@ var ThemeManager = function($viewContainer, themes) {
 		});
 		$selectedTemplateView = $templateView;
 	};
+	this.getTemplate = function(name) {
+		return templateMap[name];
+	};
 	this.addTemplate = function(template) {
 		var $templateView =
 			$('<div class="pd-ws-theme-manager-template-view">'
 				+ template.name + '</div>')
 			.data('template', template).on('click', function(e) {
-				self.selectTemplate($(e.target).data('template'));
+				self.selectTemplate($(e.target).data('template').name);
 			});
 		var bgColor = new RGBColor(template.bg);
 		if (bgColor.ok) {
@@ -108,9 +117,10 @@ var ThemeManager = function($viewContainer, themes) {
 		templateMap[template.name] = template;
 		return $templateView;
 	};
-	this.getTemplate = function(name) {
-		return templateMap[name];
+	this.openTemplate = function(name) {
+		
 	};
+	
 	this.setTemplates = function(templates) {
 		$templateContainer.empty();
 		for (var i = 0; i < templates.length; i++) {

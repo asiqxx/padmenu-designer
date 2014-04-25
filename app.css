@@ -33,7 +33,7 @@ body {
 	text-align: center;
 }
 
-#price-container {
+#panel-west {
 	position: absolute;
 	top: 40px;
 	bottom: 0;
@@ -41,7 +41,7 @@ body {
 	right: 0;
 }
 
-#main-toolbar {
+#panel-east {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -115,21 +115,11 @@ body {
 	border-right: 1px solid #404040;
 }
 
-#ws {
+.ws {
 	position: absolute;
 	top: 2.4em;
 	left: 0;
 	bottom: 0;
 	right: 0;
 	background-color: #696969;
-}
-
-#ws-template {
-	position: absolute;
-	top: 2.4em;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	background-color: #696969;
-	display:none;
 }

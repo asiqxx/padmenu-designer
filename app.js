@@ -106,38 +106,10 @@ jQuery(document).ready(function($) {
 				};
 				wsController.addSelectEventListener(wsControllerEventListener);
 
-				var $toolbar = $('#main-toolbar').pdAccordion({
+				$('#panel-west').pdAccordion();
+				var $toolbar = $('#panel-east').pdAccordion({
 					mode : 'multi',
-					collapsible : true,
-					active : true
-				});
-				
-				$('#price-container').pdAccordion();
-				
-				$('#ws-toolbar').pdToolbar({
-					source : [{
-						'name' : 'spades',
-						'type' : 'class',
-						'value' : 'icon-icomoon-spades',
-						'mode' : 'option'
-					}, {
-						'name' : 'clubs',
-						'type' : 'class',
-						'value' : 'icon-icomoon-clubs',
-						'mode' : 'option'
-					}, {
-						'type' : 'separator'
-					}, {
-						'name' : 'diamonds',
-						'type' : 'class',
-						'value' : 'icon-icomoon-diamonds',
-						'mode' : 'option'
-					}, {
-						'name' : 'heart',
-						'type' : 'class',
-						'value' : 'icon-icomoon-heart',
-						'mode' : 'option'
-					}]
+					collapsible : true
 				});
 				
 				$('#ws-primitives').pdToolbar({

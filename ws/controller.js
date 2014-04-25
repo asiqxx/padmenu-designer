@@ -224,6 +224,7 @@ var WsControllerSupport = function() {
 	var pageMargin = 20;
 	self.createView = function(container) {
 		viewContainer = container;
+		viewContainer.addClass('pd-ws');
 		viewContainer.pdDraggable({
 			dragObject : function() {
 				return $('<div/>');
