@@ -23,8 +23,11 @@ time, mark, audio, video, input, textarea, select {
 	text-decoration: none;
 	list-style: none;
 	vertical-align: baseline;
+	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .layout {
@@ -74,6 +77,8 @@ time, mark, audio, video, input, textarea, select {
 
 .pd-content {
 	background: #333;
+	-webkit-box-shadow: 0px 0px 6px 3px #222 inset;
+	-moz-box-shadow: 0px 0px 6px 3px #222 inset;
     box-shadow: 0px 0px 6px 3px #222 inset;
 }
 

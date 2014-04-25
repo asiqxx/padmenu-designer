@@ -66,9 +66,8 @@ var WsControllerSupport = function() {
 		return selectedItem;
 	};
 	self.selectItem = function(item) {
-		selectedItem = item;
-		var itemView = self.getItemView(selectedItem);
-		if (!selectedItem || itemView === null) {
+		var itemView = self.getItemView(item);
+		if (!item || itemView === null) {
 			selectedItemView.setVisible(false);
 		} else {
 			selectedItemView.setPosition(itemView.getPosition());
@@ -76,49 +75,57 @@ var WsControllerSupport = function() {
 			selectedItemView.getChildren().setSize(itemView.getSize());
 			selectedItemView.setVisible(true);
 		}
+		if (item !== selectedItem) {
+			self.destroyEditor();
+			selectedItem = item;
+			self.fireSelectEvent();
+		}
 		pageIView.batchDraw();
-		self.fireSelectEvent(selectedItem);
 	};
 	
 	var editor = null;
 	self.getEditor = function() {
 		return editor;
 	},
-	self.setEditor = function(newEditor) {
-		editor = newEditor;
-	},
-	self.updateEditorGeometry = function() {
+	self.createEditor = function(onChange) {
+		if (selectedItem === null) {
+			return;
+		}
+		editor = WsItemFactory.forType(selectedItem.type).createEditor(
+			selectedItem, onChange);
 		if (editor === null) {
 			return;
 		}
-		var itemView = self.getItemView(selectedItem);
-		var position = itemView.getAbsolutePosition();
-		var size = itemView.getSize();
-		var editorPosition = editor.position();
-		if (position.x === editorPosition.left
-			&& position.y === editorPosition.top
-			&& size.width === editor.width()
-			&& size.height === editor.height()) {
-			return;	
+		editor.setSize(selectedItemView.getSize());
+		editor.setAttr('preventDestroy', true);
+		selectedItemView.add(editor);
+		editor.fire('create');
+		pageIView.batchDraw();
+	},
+	self.destroyEditor = function() {
+		if (editor === null) {
+			return;
 		}
-		editor.css({
-			'left' : position.x + 'px',
-			'top' : position.y + 'px',
-			'width' : size.width + 'px',
-			'height' : size.height + 'px',
-			'overflow' : 'hidden'
-		});
-	};
+		var temporaryEditor = editor;
+		editor = null;
+		temporaryEditor.destroy();
+		temporaryEditor.fire('destroy');
+		pageIView.batchDraw();
+	},
 	self.setBgColor = function(color) {
 		var pageBg = pageBgView.find('.bgColor');
 		pageBg.fill(color);
 		pageBg.cache();
+		var placeholderItemView = pageIView.find('.placeholderItemView');
+		var rgbColor = new RGBColor(color);
+		if (rgbColor.ok) {
+			placeholderItemView.fill('rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + 0.5 + ')');
+		}
 	};
 	self.setPagePosition = function(position) {
 		pageView.setPosition(position);
 		pageBgView.setPosition(position);
 		pageIView.setPosition(position);
-		self.updateEditorGeometry();
 	};
 	self.setPageSize = function(size) {
 		pageView.setSize(size);
@@ -146,31 +153,42 @@ var WsControllerSupport = function() {
 			self.updateViewGeometry();
 		}, 250);
 	};
+	self.onKeydown = function(e) {
+		//console.log('onKeydown')
+		if (editor) {
+			e.stopPropagation();
+		}
+		switch (e.which) {
+		case 27:
+			self.destroyEditor();
+			break;
+		default:
+			break;
+		}
+		return;
+	};
 	self.onBodyClick = function(e) {
-		console.log('onBodyClick')
+		//console.log('onBodyClick')
 		if (e.which !== 1) {
 			return;
 		}
-		var targetEditor = WsControllerSupport.getEventTarget(e,
-			function(target) {
-				return target.hasClass('pd-ws-editor');
+		if (editor) {
+			if (editor.getAttr('preventDestroy') === true) {
+				editor.setAttr('preventDestroy', false);
+				return;
 			}
-		);
-		if (editor && targetEditor === null) {
-			editor.triggerHandler('destroy');
-			editor.remove();
-			editor = null;
+			self.destroyEditor();
 		}
 	};
 	self.onPageBgViewClick = function(data) {
-		console.log('onPageBgViewClick')
+		//console.log('onPageBgViewClick')
 		if (data.evt.which !== 1) {
 			return;
 		}
 		self.selectItem();
 	},
 	self.onPageViewClick = function(data) {
-		console.log('onPageViewClick')
+		//console.log('onPageViewClick')
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -183,21 +201,24 @@ var WsControllerSupport = function() {
 		);
 		self.selectItem(itemView.getAttr('model'));
 	},
-	self.onSelectedItemViewDblClick = function(data) {
-		console.log('onSelectedItemViewDblClick')
+	self.onSelectedItemViewClick = function(data) {
+		//console.log('onSelectedItemViewClick')
 		if (data.evt.which !== 1) {
 			return;
 		}
-		var newEditor = WsItemFactory.forType(selectedItem.type).createEditor(
-			selectedItem, this.updateSelectedItem);
-		if (newEditor === null || newEditor.length === 0) {
+		if (editor !== null) {
+			editor.setAttr('preventDestroy', true);
+		}
+	}
+	self.onSelectedItemViewDblClick = function(data) {
+		//console.log('onSelectedItemViewDblClick')
+		if (data.evt.which !== 1) {
 			return;
 		}
-		editor = newEditor;
-		editor.addClass('pd-ws-editor');
-		this.updateEditorGeometry();
-		editor.appendTo(viewContainer);
-		editor.triggerHandler('create');
+		if (editor !== null) {
+			return;
+		}
+		self.createEditor(this.updateSelectedItem);
 	}
 	
 	var pageMargin = 20;
@@ -242,7 +263,9 @@ var WsControllerSupport = function() {
 		pageView.setZIndex(1);
 		pageBgView = new Kinetic.Layer();
 		pageBgView.add(new Kinetic.Rect({
-			name : 'bgColor'
+			name : 'bgColor',
+			stroke : 'black',
+			strokeWidth : 1,
 		}));
 		view.add(pageBgView);
 		pageBgView.setZIndex(0);
@@ -259,9 +282,9 @@ var WsControllerSupport = function() {
 		placeholderItemView = new Kinetic.Rect({
 			name : 'placeholderItemView',
 			fill : 'rgba(255, 255, 255, 0.5)',
-			stroke : 'black',
+			stroke : 'red',
 			strokeWidth : 1,
-			dash : [2, 2]
+			dash : [8, 4]
 		});
 		pageIView.add(placeholderItemView);
 		view.add(pageIView);
@@ -271,7 +294,7 @@ var WsControllerSupport = function() {
 	var selectEventListeners = [];
     self.fireSelectEvent = function(selectedItem) {
 		for (var i in selectEventListeners) {
-			selectEventListeners[i].onSelect(selectedItem);
+			selectEventListeners[i].onSelect(self.getSelectedItem());
 		}
     };
 	self.addSelectEventListener = function(listener) {
@@ -328,8 +351,29 @@ var WsController = function(viewContainer, model, themeManager) {
 	var reneredItems = [];
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
+		onKeydown : function(e) {
+			//console.log('onKeydown')
+			self.onKeydown(e);
+			if (e.isPropagationStopped()) {
+				return;
+			}
+			switch (e.which) {
+			case 46:
+				if (self.getSelectedItem()) {
+					WsController.cache.remove(self.getSelectedItem());
+					reneredItems = [];
+					model.remove(self.getSelectedItem().p,
+						self.getSelectedItem().i);
+					model.store();
+					self.selectItem();
+				}
+				break;
+			default:
+				break;
+			}
+			return;
+		},
 		onDropAccept : function($dragObject) {
-			console.lo($dragObject);
 			return $dragObject.data('pdWsItem');
 		},
 		onDropOver : function(e) {
@@ -398,7 +442,6 @@ var WsController = function(viewContainer, model, themeManager) {
 			}
 			var itemView = self.getItemView(placeholderItem);
 			if (itemView) {
-				WsItemFactory.util.makePlaceHolder(itemView, false);
 				self.selectItem(placeholderItem);
 			}
 			self.setPlaceholderItem();
@@ -433,9 +476,12 @@ var WsController = function(viewContainer, model, themeManager) {
 		move : eventListener.onDropMove
 	});
 	$(window).on('resize.pdWsController', self.onWindowResize);
+	$(window).on('keydown.pdWsController', eventListener.onKeydown);
 	$(document.body).on('click.pdWsController', self.onBodyClick);
 	self.getPageView().on('click.pdWsController', self.onPageViewClick);
 	self.getPageBgView().on('click.pdWsController', self.onPageBgViewClick);
+	self.getSelectedItemView().on('click.pdWsController',
+		self.onSelectedItemViewClick);
 	self.getSelectedItemView().on('dblclick.pdWsController',
 		eventListener.onSelectedItemViewDblClick);
 	model.addChangeEventListener(modelEventListener);
@@ -447,6 +493,7 @@ var WsController = function(viewContainer, model, themeManager) {
 		if (!update) {
 			model.remove(self.getSelectedItem().p,
 				self.getSelectedItem().i);
+			model.store();
 			self.selectItem();
 			return;
 		}
@@ -462,14 +509,12 @@ var WsController = function(viewContainer, model, themeManager) {
 				selectedItem.h = model.getHeight();
 			}
 			model.update(selectedItem.p, selectedItem.i);
-			//model.store();
+			model.store();
 			if (page != selectedItem.p) {
 				page = selectedItem.p;
 				self.render(0);
 			}
 			self.selectItem(selectedItem);
-			
-			self.updateEditorGeometry();
 		});
 		wsItemFactory.render(itemView);
 	};
@@ -486,12 +531,18 @@ var WsController = function(viewContainer, model, themeManager) {
 		return true;
 	}
 	self.render = function(index) {
+		console.log(index);
 		var items = model.get(page);
+		console.log('==');
+		console.log(items.length);
+		console.log(reneredItems.length);
 		if (items.length) {
 			items = items.slice(index);
 			if (compareItemArrays(items, reneredItems)) {
+				console.log('return');
 				return;
 			}
+			console.log('render');
 			var itemViews = pageView.getChildren(function(node) {
 				return node.getAttr('model')
 					&& node.getAttr('index') >= index;
@@ -524,7 +575,7 @@ var WsController = function(viewContainer, model, themeManager) {
 			reneredItems = items;
 		} else {
 			self.setPlaceholderItem(self.getPlaceholderItem());
-			pageView.find('Group').removeChildren();
+			pageView.removeChildren();
 			reneredItems = [];
 		}
 		pageView.batchDraw();
@@ -570,8 +621,7 @@ var WsTemplateController = function(viewContainer, themeManager) {
 	var self = this;
 	self.createView(viewContainer);
 	var model = null;
-	var pageView = self.getView().getLayers()[0];
-	var pageBg = pageView.find('.bg');
+	var pageView = self.getPageView();
 	
 	function addItem(item) {
 		model.items.push(item);
@@ -581,6 +631,19 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		pageView.add(itemView);
 		itemView.setZIndex(item.zIndex);
 		itemView.setDraggable(true);
+		itemView.on('dragmove', function(data) {
+			var item = this.getAttr('model');
+			if (item === self.getSelectedItem()) {
+				self.selectItem(self.getSelectedItem());
+			}
+		});
+		itemView.on('dragend', function(data) {
+			var item = this.getAttr('model');
+			var position = this.getPosition();
+			item.x = position.x;
+			item.y = position.y;
+			self.selectItem(item);
+		});
 		pageView.draw();
 	}
 	function removeItem(item) {
@@ -595,7 +658,32 @@ var WsTemplateController = function(viewContainer, themeManager) {
 	}
 	
 	var eventListener = {
-		onViewDblClick : self.onViewDblClick.bind(self),
+		onKeydown : function(e) {
+			//console.log('onKeydown')
+			self.onKeydown(e);
+			if (e.isPropagationStopped()) {
+				return;
+			}
+			switch (e.which) {
+			case 46:
+				if (self.getSelectedItem()) {
+					removeItem(self.getSelectedItem());
+					self.selectItem();
+				}
+				break;
+			default:
+				break;
+			}
+			return;
+		},
+		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
+		onSelectedItemViewMousedown : function(data) {
+			if (self.getEditor() !== null) {
+				return;
+			}
+			var itemView = self.getItemView(self.getSelectedItem());
+			itemView.startDrag();
+		},
 		onDropAccept : function($dragObject) {
 			return $dragObject.data('pdWsItem');
 		},
@@ -625,6 +713,7 @@ var WsTemplateController = function(viewContainer, themeManager) {
 				item.h = model.height;
 			}
 			addItem(item);
+			self.selectItem(item);
 		}
 	};
 	
@@ -641,51 +730,75 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		if (typeof model.items !== 'array') {
 			model.items = [];
 		}
-		pageView.setSize({
+		self.setPageSize({
 			width : model.width,
 			height : model.height
 		});
-		pageBg.setSize(pageView.getSize());
-		pageBg.fill(model.bg);
-		pageBg.cache();
-		self.updateViewGeometry();
+		self.setBgColor(model.bgColor);
 		
 		$(window).on('resize.pdWsTemplateController', self.onWindowResize);
-		$(document.body).on('mousedown.pdWsTemplateController',
-			self.onBodyClick);
-		pageView.on('click.pdWsTemplateController', self.onViewClick);
-		pageIView.on('dblclick.pdWsTemplateController',
-			eventListener.onViewDblClick);
+		$(window).on('keydown.pdWsTemplateController', eventListener.onKeydown);
+		$(document.body).on('click.pdWsTemplateController', self.onBodyClick);
+		self.getPageView().on('click.pdWsTemplateController',
+			self.onPageViewClick);
+		self.getPageBgView().on('click.pdWsTemplateController',
+			self.onPageBgViewClick);
+		self.getSelectedItemView().on('click.pdWsTemplateController',
+			self.onSelectedItemViewClick);
+		self.getSelectedItemView().on('dblclick.pdWsTemplateController',
+			eventListener.onSelectedItemViewDblClick);
+		self.getSelectedItemView().on('mousedown.pdWsTemplateController',
+			eventListener.onSelectedItemViewMousedown);
 			
 		viewContainer.show();
+		self.updateViewGeometry();
 	};
 	
 	self.close = function() {
 		viewContainer.hide();
-		$(window).off('pdWsTemplateController');
-		$(document.body).off('pdWsTemplateController');
-		pageView.off('pdWsTemplateController');
-		pageView.off('pdWsTemplateController');
-		pageView.find('Group').removeChildren();
-		pageBg.clearCache();
+		$(window).off('.pdWsTemplateController');
+		$(document.body).on('.pdWsTemplateController');
+		self.getPageView().on('.pdWsTemplateController');
+		self.getPageBgView().on('.pdWsTemplateController');
+		self.getSelectedItemView().off('.pdWsTemplateController');
+		pageView.removeChildren();
 		pageView.draw();
+		self.fireChangeEvent();
 		model = null;
 	};
 	
 	self.updateSelectedItem = function(update) {
 		if (!update) {
 			removeItem(self.getSelectedItem());
+			self.selectItem();
 			return;
 		}
 		$.extend(true, self.getSelectedItem(), update);
 		var itemView = self.getItemView(self.getSelectedItem());
 		WsItemFactory.util.clearView(itemView);
 		itemView.on('render', function() {
-			self.updateEditorGeometry();
 			self.selectItem(self.getSelectedItem());
+			pageView.batchDraw();
 			this.off('render');
 		});
 		WsItemFactory.forType(self.getSelectedItem().type).render(itemView);
+	};
+	
+	var changeEventListeners = [];
+    self.fireChangeEvent = function() {
+		for (var i in changeEventListeners) {
+			changeEventListeners[i].onChange(model);
+		}
+    };
+	self.addChangeEventListener = function(listener) {
+		changeEventListeners.push(listener);
+	};
+	self.removeChangeEventListener = function(listener) {
+		var index = changeEventListeners.indexOf(listener);
+		if (index == -1) {
+			return;
+		}
+		changeEventListeners.splice(index, 1);
 	};
 	
 	viewContainer.hide();

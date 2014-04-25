@@ -18,7 +18,8 @@ var TextWsItemFactory = function() {
 			width : model.w ? model.w : 'auto',
 			height : model.h ? model.h : 'auto',
 			fill : model.color,
-			text : model.config.text.length ? model.config.text : ' Text ',
+			text : model.config.text.length
+				? model.config.text : ' Type here... ',
 			fontSize : model.config.fontSize,
 			fontFamily : model.config.fontFamily,
 		});
@@ -58,7 +59,8 @@ var TextWsItemFactory = function() {
 			}
 		});
 	};
-	function setSelectionRange(input, selectionStart, selectionEnd) {
+	function setSelectionRange($input, selectionStart, selectionEnd) {
+		var input = $input.get(0);
 		if (input.setSelectionRange) {
 			input.focus();
 			input.setSelectionRange(selectionStart, selectionEnd);
@@ -71,27 +73,29 @@ var TextWsItemFactory = function() {
 		}
 	}
 	this.createEditor = function(model, onChange) {
-		return $('<textarea></textarea>').css({
-			'resize' : 'none',
-			'font-family' : model.config.fontFamily,
-			'font-size' : model.config.fontSize + 'px',
+		var $textarea = $('<textarea></textarea>').css({
+			'left' : '666666px'
 		}).text(model.config.text).on('keyup', function(e) {
-			var text = $(this).val();
+			var text = $textarea.val();
 			onChange({
 				h : 0,
 				config : {
 					text : text
 				}
 			});
-		}).on('create', function() {
-			var text = $(this).val();
-			setSelectionRange(this, text.length, text.length);
-		}).on('destroy', function() {
-			var text = $(this).val();
-			if (text.length === 0) {
+		}).appendTo($(document.body));
+		setSelectionRange($textarea, model.config.text.length, model.config.text.length);
+		var editor = new Kinetic.Rect({
+			fill : 'red',
+			opacity : 0.2
+		});
+		editor.on('destroy', function() {
+			if ($textarea.val().length === 0) {
 				onChange();
 			}
+			$textarea.remove();
 		});
+		return editor;
 	};
 };
 TextWsItemFactory.inherits(WsItemFactory);

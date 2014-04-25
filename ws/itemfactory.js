@@ -123,29 +123,5 @@ WsItemFactory.util = {
 	},
 	clearView : function(view) {
 		view.removeChildren();
-	},
-	makePlaceHolder : function(view, isPlaceHolder) {
-		var model = view.getAttr('model');
-		var bg = view.find('.bg');
-		if (isPlaceHolder) {
-			bg.setStroke('black');
-			bg.setStrokeWidth(1);
-			view.setOpacity(0.25 * model.opacity);
-		} else {
-			bg.setStroke(model.borderColor);
-			bg.setStrokeWidth(model.borderWidth);
-			view.setOpacity(model.opacity);
-		}
-	},
-	makeSelected : function(view, isSelected) {
-		var model = view.getAttr('model');
-		var bg = view.find('.bg');
-		if (isSelected) {
-			bg.setStroke('red');
-			bg.setStrokeWidth(1);
-		} else {
-			bg.setStroke(model.borderColor);
-			bg.setStrokeWidth(model.borderWidth);
-		}
-	},
+	}
 };

@@ -38,15 +38,14 @@ LsWsItemFactory.inherits(WsItemFactory);
 
 var PsWsItemFactory = function() {
 	this.createView = function(model) {
-		var view = this.uber('createView', model);
-		Object.extend(model, Object.extend({
+		Object.extend(model, {
 			type : 'ps',
 			bg : '#FFFFFF',
 			borderColor : '#000000',
 			borderSize : 1,
 			zIndex : 2
-		}, model));
-		return view;
+		});
+		return this.uber('createView', model);
 	};
 	this.render = function(view) {
 		var model = view.getAttr('model');

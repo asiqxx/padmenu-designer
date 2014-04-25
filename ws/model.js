@@ -286,22 +286,25 @@ var WsModel = function() {
 	};
 
 	this.store = function(state) {
-		if (state) {
-			states = [];
-			data = $.extend(true, {}, state);
-		} else {
-			if (stateIndex < states.length - 1) {
-				states.splice(stateIndex + 1, states.length - stateIndex - 1);
+		clearTimeout(storeTimerId);
+		storeTimerId = setTimeout(function() {
+			if (state) {
+				states = [];
+				data = $.extend(true, {}, state);
+			} else {
+				if (stateIndex < states.length - 1) {
+					states.splice(stateIndex + 1, states.length - stateIndex - 1);
+				}
+				state = $.extend(true, {}, data);
 			}
-			state = $.extend(true, {}, data);
-		}
-		
-		stateIndex = states.push(state) - 1;
+			
+			stateIndex = states.push(state) - 1;
 
-		fireStoreEvent();
-		
-		sessionStorage.setItem('wsmodel.states', JSON.stringify(states));
-		sessionStorage.setItem('wsmodel.state.index', stateIndex);
+			fireStoreEvent();
+			
+			sessionStorage.setItem('wsmodel.states', JSON.stringify(states));
+			sessionStorage.setItem('wsmodel.state.index', stateIndex);
+		}, 250);
 	};
 	this.restore = function(offset) {
 		if (stateIndex < 0) {			
