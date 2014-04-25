@@ -1,0 +1,23 @@
+@CHARSET "UTF-8";
+
+.pd-accordion {
+	overflow-x: hidden;
+}
+
+.pd-accordion-header {
+}
+
+.pd-accordion-header:hover {
+	cursor: pointer;
+}
+
+.pd-accordion-content {
+	position: relative;
+}
+
+.pd-accordion>:last-child {
+}
+
+.pd-accordion-content>:first-child {
+	margin: 0;
+}

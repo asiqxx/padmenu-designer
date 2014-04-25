@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+	<title>Padmenu Designer D2T</title>
+	
+	<meta charset="UTF-8">
 
+	<link rel="stylesheet" href="public/icons/icomoon/style.css">	
+	<script src="3rdparty/jquery-2.1.0.min.js"></script>
+	<script src="3rdparty/kinetic-v5.1.0.min.js"></script>
+	<script src="3rdparty/rgbcolor.js"></script>
+	<script src="3rdparty/dpd.js"></script>
+	
+	<link rel="stylesheet" href="base.css">
+	<script src="base.js"></script>
+	<script src="dragndrop/dragndrop.js"></script>
+	<link rel="stylesheet" href="toolbar/toolbar.css">
+	<script src="toolbar/toolbar.js"></script>
+	<link rel="stylesheet" href="accordion/accordion.css">
+	<script src="accordion/accordion.js"></script>
+	<link rel="stylesheet" href="ws/base.css">
+	<script src="ws/model.js"></script>
+	<script src="ws/controller.js"></script>
+	<script src="ws/itemfactory.js"></script>
+	<script src="ws/item.js"></script>
+	<script src="ws/itemfactories/base.js"></script>
+	<script src="ws/itemfactories/text.js"></script>
+	<script src="ws/itemfactories/image.js"></script>
+	<script src="ws/theme/manager.js"></script>
+	<script src="ws/properties/browser.js"></script>
+	<link rel="stylesheet" href="app.css">
+	<script src="app.js"></script>
+</head>
+
+<body class="rasta">
+	<div class="layout layout-west">
+		<div id="logo">padmenu designer</div>
+		<div id="price-container">
+			<h3>Price</h3>
+			<div>
+				<div id="price"><br><br><br><br><br><br></div>
+			</div>
+		</div>
+	</div>
+	<div class="layout layout-center">
+		<div id="ws-toolbar"></div>
+		<div id="ws"></div>
+		<div id="ws-template"></div>
+	</div>
+	<div class="layout layout-east">
+		<div id="main-toolbar">
+			<h3>Theme</h3>
+			<div>
+				<div id="ws-theme"></div>
+			</div>
+			<h3>Pages</h3>
+			<div>
+				<div id="ws-navigation"><br><br><br><br><br><br></div>
+			</div>
+			<h3>Blocks</h3>
+			<div>
+				<div id="ws-primitives"></div>
+			</div>
+			<h3>Properties</h3>
+			<div>
+				<div id="ws-properties"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

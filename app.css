@@ -1,0 +1,135 @@
+@CHARSET "UTF-8";
+
+body {
+	visibility: hidden;
+
+	color: #F5F5DC;
+	
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	
+	overflow: hidden;
+}
+
+.pd-accordion>:last-child {
+	border-bottom: 1px solid #4D4D4D;
+}
+
+#logo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 40px;
+	
+	background-color: #FC8;
+	color: #222;
+	border-top: 8px solid #696;
+	border-bottom: 8px solid #D44;
+	
+	font-weight: bold;
+	font-size: 24px;
+	line-height: 24px;
+	text-align: center;
+}
+
+#price-container {
+	position: absolute;
+	top: 40px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+#main-toolbar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+#ws-toolbar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2.4em;
+	
+	background-color: #333;
+	border-bottom: 0.2em solid #222;
+}
+
+#ws-toolbar>.pd-toolbar-item {
+	margin: 0.2em;
+	margin-left: 0.2em;
+	margin-right: 0.2em;
+	padding: 0.3em;
+	
+	color: #F5F5DC;
+	border: 0.1em solid #333;
+	
+	font-size: 1em;
+}
+
+#ws-toolbar>.pd-toolbar-item:hover {
+	color: #9C9;
+}
+
+#ws-toolbar>.pd-toolbar-item-active {
+	background-color: #222;
+	border: 0.1em solid #000;
+}
+
+#ws-toolbar>.pd-toolbar-item-separator {
+	background-color: #202020;
+	width: 2px;
+	border-right: 1px solid #404040;
+}
+
+#ws-primitives {
+	padding: 0.4em;
+}
+
+#ws-primitives>.pd-toolbar-item {
+	margin-right: 0.1em;
+
+	color: #F5F5DC;
+	border: 0.1em solid #333;
+}
+
+#ws-primitives>.pd-toolbar-item:hover {
+	background-color: #222;
+	color: #D44;
+	border: 0.1em solid #000;
+}
+
+#ws-primitives>.pd-toolbar-item-active {
+	background-color: #222;
+	border: 0.1em solid #000;
+}
+
+#ws-primitives>.pd-toolbar-item-separator {
+	background-color: #202020;
+	width: 2px;
+	border-right: 1px solid #404040;
+}
+
+#ws {
+	position: absolute;
+	top: 2.4em;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background-color: #696969;
+}
+
+#ws-template {
+	position: absolute;
+	top: 2.4em;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background-color: #696969;
+	display:none;
+}

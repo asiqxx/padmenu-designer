@@ -1,0 +1,27 @@
+@CHARSET "UTF-8";
+
+.pd-toolbar {
+	overflow: hidden;
+}
+
+.pd-toolbar-item {
+	float: left;
+	margin: 0.16em;
+	padding: 0.24em;
+	border: 0.1em solid;
+	font-size: 2em;
+	line-height: 1em;
+	text-align: center;
+}
+
+.pd-toolbar-item:hover {
+	cursor: pointer;
+}
+
+.pd-toolbar-item-active {
+}
+
+.pd-toolbar-item-separator {
+	float: left;
+	width: 1px;
+}

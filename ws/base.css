@@ -1,0 +1,129 @@
+.pd-ws-item {
+	background-color: #F5F5F5;
+	-webkit-box-shadow: 0px 0px 4px 1px #000;
+    -moz-box-shadow: 0px 0px 4px 1px #000;
+    box-shadow: 0px 0px 4px 1px #000;
+	cursor: pointer;
+}
+
+.pd-ws-theme-manager {
+	padding: 0.75em 1em;
+}
+
+.pd-ws-theme-manager-changer {
+	background-color: #222;
+	color: #F5F5DC;
+    box-shadow: 0px 0px 8px 2px #181818 inset;
+    border-bottom: 1px solid #444;
+	padding: 0.3em 0.6em;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.pd-ws-theme-manager-template-container {
+	background-color: #222;
+    box-shadow: 0px 0px 8px 2px #181818 inset;
+    border-bottom: 1px solid #444;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    height: 8.5em;
+    overflow: auto;
+}
+
+.pd-ws-theme-manager-template-view {
+	background-color: #FFF;
+	color: #222;
+	display: inline-block;
+	margin: 0.1em;
+	padding: 0.2em 0.4em;
+	border: 0.2em solid #111;
+	font-size: 1em;
+	line-height: 1.5em;
+	text-align: center;
+}
+
+.pd-ws-theme-manager-template-view:hover {
+	cursor: pointer;
+}
+
+.pd-ws-theme-manager-template-view-selected {
+	opacity: 0.5;
+}
+
+.pd-ws-theme-manager .pd-toolbar-item {
+	margin: 0.2em;
+	margin-left: 0.2em;
+	margin-right: 0.2em;
+	padding: 0.3em;
+	
+	color: #F5F5DC;
+	border: 0.1em solid #333;
+	
+	font-size: 1em;
+}
+
+.pd-ws-theme-manager .pd-toolbar-item:hover {
+	color: #FC8;
+}
+
+.pd-ws-theme-manager .pd-toolbar-item-active {
+	background-color: #222;
+	border: 0.1em solid #000;
+}
+
+.pd-ws-theme-manager .pd-toolbar-item-separator {
+	background-color: #202020;
+	width: 2px;
+	border-right: 1px solid #404040;
+}
+
+.pd-ws-property-browser {
+	padding: 0.75em 1em;
+}
+
+.pd-ws-property {
+	margin: 0.3em 0;
+}
+
+.pd-ws-property-label {
+	border-bottom: 1px solid transparent;
+	display: inline-block;
+	width: 50%;
+	padding: 0.3em 0;
+}
+.rasta .pd-ws-property-color-green {
+	color : #9C9 !important;
+}
+.rasta .pd-ws-property-color-red {
+	color : #D44 !important;
+}
+.rasta .pd-ws-property-color-yellow {
+	color : #FD8 !important;
+}
+
+.pd-ws-property-control {
+	background-color: #222;
+	color: #F5F5DC;
+    box-shadow: 0px 0px 8px 2px #181818 inset;
+    border-bottom: 1px solid #444;
+	padding: 0.3em 0.6em;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	display: inline-block;
+	width: 50%;
+}
+
+.pd-ws-property-control[readonly=true] {
+	opacity: 0.5;
+}
+
+.pd-ws-editor {
+	background-color: #FFF;
+	color: #000;
+	border: 0;
+	outline: 0;
+	padding: 0;
+	margin: 0;
+	position : absolute;
+	overflow: hidden;
+}
