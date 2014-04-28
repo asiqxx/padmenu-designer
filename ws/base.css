@@ -1,12 +1,17 @@
+@CHARSET "UTF-8";
+
 .pd-ws {
 	position: absolute;
+	display: none;
 	top: 0;
 	left: 0;
 	bottom: 0;
 	right: 0;
 	background-color: #696969;
 }
-
+.pd-ws-focused {
+	display: block;
+}
 .pd-ws-item {
 	background-color: #F5F5F5;
 	-webkit-box-shadow: 0px 0px 4px 1px #000;
@@ -14,130 +19,6 @@
     box-shadow: 0px 0px 4px 1px #000;
 	cursor: pointer;
 }
-
-.pd-ws-theme-manager {
-	padding: 0.75em 1em;
-}
-
-.pd-ws-theme-manager-changer {
-	background-color: #222;
-	color: #F5F5DC;
-    -webkit-box-shadow: 0px 0px 8px 2px #181818 inset;
-    -moz-box-shadow: 0px 0px 8px 2px #181818 inset;
-    box-shadow: 0px 0px 8px 2px #181818 inset;
-    border-bottom: 1px solid #444;
-	padding: 0.3em 0.6em;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	width: 100%;
-}
-
-.pd-ws-theme-manager-template-container {
-	background-color: #222;
-	-webkit-box-shadow: 0px 0px 8px 2px #181818 inset;
-    -moz-box-shadow: 0px 0px 8px 2px #181818 inset;
-    box-shadow: 0px 0px 8px 2px #181818 inset;
-    border-bottom: 1px solid #444;
-    padding: 0.5em;
-    margin: 0.5em 0;
-    height: auto;
-}
-
-.pd-ws-theme-manager-template-view {
-	background-color: #FFF;
-	color: #222;
-	display: inline-block;
-	padding: 0.4em;
-	border: 0.2em solid #222;
-	font-size: 1em;
-	text-align: center;
-	position: relative;
-	z-index: 0;
-}
-
-.pd-ws-theme-manager-template-view:hover {
-	cursor: pointer;
-}
-
-.pd-ws-theme-manager-template-view-selected {
-	border-color: #FFF;
-	-webkit-box-shadow: 0px 0px 6px 3px #000;
-    -moz-box-shadow: 0px 0px 6px 3px #000;
-    box-shadow: 0px 0px 6px 3px #000;
-    z-index: 1;
-}
-
-.pd-ws-theme-manager .pd-toolbar-item {
-	margin: 0.2em;
-	margin-left: 0.2em;
-	margin-right: 0.2em;
-	padding: 0.3em;
-	
-	color: #F5F5DC;
-	border: 0.1em solid #333;
-	
-	font-size: 1em;
-}
-
-.pd-ws-theme-manager .pd-toolbar-item:hover {
-	color: #FC8;
-}
-
-.pd-ws-theme-manager .pd-toolbar-item-active {
-	background-color: #222;
-	border: 0.1em solid #000;
-}
-
-.pd-ws-theme-manager .pd-toolbar-item-separator {
-	background-color: #202020;
-	width: 2px;
-	border-right: 1px solid #404040;
-}
-
-.pd-ws-property-browser {
-	padding: 0.75em 1em;
-}
-
-.pd-ws-property {
-	margin: 0.3em 0;
-}
-
-.pd-ws-property-label {
-	border-bottom: 1px solid transparent;
-	display: inline-block;
-	width: 50%;
-	padding: 0.3em 0;
-}
-.rasta .pd-ws-property-color-green {
-	color : #9C9 !important;
-}
-.rasta .pd-ws-property-color-red {
-	color : #D44 !important;
-}
-.rasta .pd-ws-property-color-yellow {
-	color : #FD8 !important;
-}
-
-.pd-ws-property-control {
-	background-color: #222;
-	color: #F5F5DC;
-	-webkit-box-shadow: 0px 0px 8px 2px #181818 inset;
-    -moz-box-shadow: 0px 0px 8px 2px #181818 inset;
-    box-shadow: 0px 0px 8px 2px #181818 inset;
-    border-bottom: 1px solid #444;
-	padding: 0.3em 0.6em;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	display: inline-block;
-	width: 50%;
-}
-
-.pd-ws-property-control[readonly=true] {
-	opacity: 0.5;
-}
-
 .pd-ws-editor {
 	background-color: #FFF;
 	color: #000;

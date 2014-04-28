@@ -1,12 +1,12 @@
-var ThemeManager = function($viewContainer, themes) {
+var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 	var self = this;
 	var theme = null;
 	var templates = [];
 	var templateMap = [];
 	var $selectedTemplateView = null;
 	
-	$viewContainer.addClass('pd-ws-theme-manager');
-	var $themeChanger = $('<select class="pd-ws-theme-manager-changer"/>');
+	$viewContainer.addClass('pd-theme-manager');
+	var $themeChanger = $('<select class="pd-theme-changer"/>');
 	for (var i = 0; i < themes.length; i++) {
 		var theme = themes[i];
 		$themeChanger.append(new Option(theme.name, theme.id));
@@ -15,7 +15,10 @@ var ThemeManager = function($viewContainer, themes) {
 	$viewContainer.append($('<hr/>'));
 	$viewContainer.append($('<div>Templates</div>'));
 	var $templateContainer =
-		$('<div class="pd-ws-theme-manager-template-container"/>');
+		$('<div class="pd-template-container"/>').on('click',
+		function() {
+			self.selectTemplate();
+		});
 	$viewContainer.append($templateContainer);
 	$viewContainer.append($('<hr/>'));
 	var $templateToolbar = $('<div/>').pdToolbar({
@@ -33,11 +36,11 @@ var ThemeManager = function($viewContainer, themes) {
 					name : templateName,
 					width : theme.width,
 					height : theme.height,
-					bg : 'transparent',
+					bgColor : 'transparent',
 				};
 				self.addTemplate(template);
 				self.selectTemplate(template.name);
-				self.openTemplate(template.name);
+				wsTemplateController.open(template);
 			}
 		}, {
 			'name' : 'remove',
@@ -49,6 +52,12 @@ var ThemeManager = function($viewContainer, themes) {
 	});
 	$viewContainer.append($templateToolbar);
 
+	var templateSelectEventListeners = [];
+    function fireTemplateSelectEvent(selected) {
+		for (var i in templateSelectEventListeners) {
+			templateSelectEventListeners[i].onTemplateSelect(selected);
+		}
+    };
 	var themeChangeEventListeners = [];
     function fireThemeChangeEvent() {
 		for (var i in themeChangeEventListeners) {
@@ -56,7 +65,7 @@ var ThemeManager = function($viewContainer, themes) {
 		}
     }
     var changeEventListeners = [];
-    function fireChangeEvent(range) {
+    function fireChangeEvent() {
 		for (var i in changeEventListeners) {
 			changeEventListeners[i].onChange(theme, templates);
 		}
@@ -76,49 +85,42 @@ var ThemeManager = function($viewContainer, themes) {
 	};
 	
 	this.selectTemplate = function(name) {
-		var $templateView = $templateContainer.children().filter(function(i, element) {
-			return $(element).data('template').name === name;
-		});
 		if ($selectedTemplateView) {
 			$selectedTemplateView.removeClass(
-				'pd-ws-theme-manager-template-view-selected');
-			$selectedTemplateView.css({
-				'border-color' : ''
-			});
+				'pd-template-view-selected');
 		}
-		$templateView.addClass(
-				'pd-ws-theme-manager-template-view-selected');
-		$templateView.css({
-			'border-color' : $templateView.css('background-color')
-		});
-		$selectedTemplateView = $templateView;
+		var template = templateMap[name];
+		if (template) {
+			var $templateView = $templateContainer.children().filter(
+				function(i, element) {
+					return $(element).data('template').name === name;
+				});
+			if ($templateView.length === 0) {
+				return;
+			}
+			$templateView.addClass(
+					'pd-template-view-selected');
+			$selectedTemplateView = $templateView;
+		}
+		fireTemplateSelectEvent(template);
 	};
 	this.getTemplate = function(name) {
 		return templateMap[name];
 	};
 	this.addTemplate = function(template) {
-		var $templateView =
-			$('<div class="pd-ws-theme-manager-template-view">'
-				+ template.name + '</div>')
+		var $templateView = $('<div class="pd-template-view"/>')
 			.data('template', template).on('click', function(e) {
-				self.selectTemplate($(e.target).data('template').name);
-			});
-		var bgColor = new RGBColor(template.bg);
-		if (bgColor.ok) {
-			var color = bgColor.r > 127 || bgColor.g > 127
-				|| bgColor.b > 127 ? '#000' : '#F5F5DC';
-			$templateView.css({
-				'background-color' : template.bg,
-				'color' : color
-			});
-		}
-		$templateContainer.append($templateView);
+				var $target = $(e.target);
+				var template = $target.data('template');
+				if (!template) {
+					template = $target.parent().data('template');
+				}
+				self.selectTemplate(template.name);
+				return false;
+			}).text(template.name).appendTo($templateContainer);		
 		templates.push(template);
 		templateMap[template.name] = template;
 		return $templateView;
-	};
-	this.openTemplate = function(name) {
-		
 	};
 	
 	this.setTemplates = function(templates) {
@@ -132,6 +134,16 @@ var ThemeManager = function($viewContainer, themes) {
 		return templates;
 	};
 	
+	self.addTemplateSelectEventListener = function(listener) {
+		templateSelectEventListeners.push(listener);
+	};
+	self.removeTemplateSelectEventListener = function(listener) {
+		var index = templateSelectEventListeners.indexOf(listener);
+		if (index == -1) {
+			return;
+		}
+		templateSelectEventListeners.splice(index, 1);
+	};
 	this.addThemeChangeEventListener = function(listener) {
 		themeChangeEventListeners.push(listener);
 	};

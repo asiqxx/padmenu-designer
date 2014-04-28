@@ -1,12 +1,15 @@
 var WsControllerSupport = function() {
 	var self = this;
 	
-	var viewContainer = null;
+	var $viewContainer = null;
 	var view = null;
 	var pageView = null;
 	var pageBgView = null;
 	var pageIView = null;
 	
+	self.getViewContainer = function() {
+		return $viewContainer;
+	};
 	self.getView = function() {
 		return view;
 	};
@@ -21,20 +24,44 @@ var WsControllerSupport = function() {
 	};
 	
 	self.positionRelativeToPage = function(position) {
-		var viewContainerPosition = viewContainer.offset();
+		var viewContainerPosition = $viewContainer.offset();
 		var pageViewPosition = pageView.getAbsolutePosition();
 		return {
 			x : position.x - viewContainerPosition.left - pageViewPosition.x,
 			y : position.y - viewContainerPosition.top - pageViewPosition.y
 		};
-	}
+	};
+	
+	self.setPagePosition = function(position) {
+		pageView.setPosition(position);
+		pageBgView.setPosition(position);
+		pageIView.setPosition(position);
+	};
+	self.setPageSize = function(size) {
+		pageView.setSize(size);
+		pageBgView.setSize(size);
+		pageBgView.getChildren().setSize(size);
+		pageIView.setSize(size);
+	};
+	var isPageViewDraggingEnabled = false;
+	self.updateViewGeometry = function() {
+		view.setSize({
+			width : $viewContainer.width(),
+			height : $viewContainer.height()
+		});
+		self.setPagePosition({
+			x : (view.getWidth() - pageView.getWidth()) / 2,
+			y : (view.getHeight() - pageView.getHeight()) / 2
+		});
+		view.batchDraw();
+	};
 	
 	self.getItemView = function(item) {
 		var itemViews = pageView.getChildren(function(node) {
 			return node.getAttr('model') === item;
 		});
 		return itemViews.length === 0 ? null : itemViews[0];
-	}
+	};
 	
 	var placeholderItemView = null;
 	self.getPlaceholderItemView = function() {
@@ -55,7 +82,7 @@ var WsControllerSupport = function() {
 			placeholderItemView.setVisible(true);
 		}
 		pageIView.batchDraw();
-	}
+	};
 	
 	var selectedItemView = null;
 	self.getSelectedItemView = function() {
@@ -66,19 +93,22 @@ var WsControllerSupport = function() {
 		return selectedItem;
 	};
 	self.selectItem = function(item) {
-		var itemView = self.getItemView(item);
-		if (!item || itemView === null) {
+		if (!item || self.getItemView(item) === null) {
 			selectedItemView.setVisible(false);
 		} else {
-			selectedItemView.setPosition(itemView.getPosition());
-			selectedItemView.setSize(itemView.getSize());
-			selectedItemView.getChildren().setSize(itemView.getSize());
+			selectedItemView.setPosition(item);
+			var itemSize = {
+				width : item.w,
+				height : item.h
+			};
+			selectedItemView.setSize(itemSize);
+			selectedItemView.getChildren().setSize(itemSize);
 			selectedItemView.setVisible(true);
 		}
 		if (item !== selectedItem) {
 			self.destroyEditor();
 			selectedItem = item;
-			self.fireSelectEvent();
+			self.fireSelectEvent(selectedItem);
 		}
 		pageIView.batchDraw();
 	};
@@ -86,7 +116,7 @@ var WsControllerSupport = function() {
 	var editor = null;
 	self.getEditor = function() {
 		return editor;
-	},
+	};
 	self.createEditor = function(onChange) {
 		if (selectedItem === null) {
 			return;
@@ -101,7 +131,7 @@ var WsControllerSupport = function() {
 		selectedItemView.add(editor);
 		editor.fire('create');
 		pageIView.batchDraw();
-	},
+	};
 	self.destroyEditor = function() {
 		if (editor === null) {
 			return;
@@ -111,65 +141,46 @@ var WsControllerSupport = function() {
 		temporaryEditor.destroy();
 		temporaryEditor.fire('destroy');
 		pageIView.batchDraw();
-	},
+	};
+	
 	self.setBgColor = function(color) {
 		var pageBg = pageBgView.find('.bgColor');
 		pageBg.fill(color);
 		pageBg.cache();
-		var placeholderItemView = pageIView.find('.placeholderItemView');
-		var rgbColor = new RGBColor(color);
-		if (rgbColor.ok) {
-			placeholderItemView.fill('rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + 0.5 + ')');
-		}
-	};
-	self.setPagePosition = function(position) {
-		pageView.setPosition(position);
-		pageBgView.setPosition(position);
-		pageIView.setPosition(position);
-	};
-	self.setPageSize = function(size) {
-		pageView.setSize(size);
-		pageBgView.setSize(size);
-		pageBgView.getChildren().setSize(size);
-		pageIView.setSize(size);
-	};
-	var isPageViewDraggingEnabled = false;
-	self.updateViewGeometry = function() {
-		view.setSize({
-			width : viewContainer.width(),
-			height : viewContainer.height()
-		});
-		self.setPagePosition({
-			x : (view.getWidth() - pageView.getWidth()) / 2,
-			y : (view.getHeight() - pageView.getHeight()) / 2
-		});
-		view.batchDraw();
+		var placeholderItemViewBgColor = tinycolor(color);
+		placeholderItemViewBgColor.setAlpha(0.625);
+		placeholderItemView.fill(placeholderItemViewBgColor.toRgbString());
 	};
 	
 	var windowResizeEventTimerId = 0;
 	self.onWindowResize = function() {
 		clearTimeout(windowResizeEventTimerId);
+		if (!self.isFocused()) {
+			return;
+		}
 		windowResizeEventTimerId = setTimeout(function() {
 			self.updateViewGeometry();
 		}, 250);
 	};
 	self.onKeydown = function(e) {
-		//console.log('onKeydown')
-		if (editor) {
-			e.stopPropagation();
+		//console.log('onKeydown');
+		if (!self.isFocused()) {
+			return;
 		}
 		switch (e.which) {
 		case 27:
-			self.destroyEditor();
+			if (editor) {
+				e.stopPropagation();
+				self.destroyEditor();
+			}
 			break;
 		default:
 			break;
 		}
-		return;
 	};
 	self.onBodyClick = function(e) {
-		//console.log('onBodyClick')
-		if (e.which !== 1) {
+		//console.log('onBodyClick');
+		if (!self.isFocused()) {
 			return;
 		}
 		if (editor) {
@@ -177,18 +188,19 @@ var WsControllerSupport = function() {
 				editor.setAttr('preventDestroy', false);
 				return;
 			}
+			e.stopPropagation();
 			self.destroyEditor();
 		}
 	};
 	self.onPageBgViewClick = function(data) {
-		//console.log('onPageBgViewClick')
+		//console.log('onPageBgViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
 		self.selectItem();
 	},
 	self.onPageViewClick = function(data) {
-		//console.log('onPageViewClick')
+		//console.log('onPageViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -202,7 +214,7 @@ var WsControllerSupport = function() {
 		self.selectItem(itemView.getAttr('model'));
 	},
 	self.onSelectedItemViewClick = function(data) {
-		//console.log('onSelectedItemViewClick')
+		//console.log('onSelectedItemViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -211,7 +223,7 @@ var WsControllerSupport = function() {
 		}
 	}
 	self.onSelectedItemViewDblClick = function(data) {
-		//console.log('onSelectedItemViewDblClick')
+		//console.log('onSelectedItemViewDblClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -222,10 +234,11 @@ var WsControllerSupport = function() {
 	}
 	
 	var pageMargin = 20;
-	self.createView = function(container) {
-		viewContainer = container;
-		viewContainer.addClass('pd-ws');
-		viewContainer.pdDraggable({
+	self.createView = function($container) {
+		$viewContainer = $container;
+		$viewContainer.addClass('pd-ws');
+		$viewContainer.data('wsController', self);
+		$viewContainer.pdDraggable({
 			dragObject : function() {
 				return $('<div/>');
 			},
@@ -257,7 +270,7 @@ var WsControllerSupport = function() {
 			},
 		});
 		view = new Kinetic.Stage({
-			container : viewContainer.get(0)
+			container : $viewContainer.get(0)
 		});
 		pageView = new Kinetic.Layer();
 		view.add(pageView);
@@ -277,12 +290,11 @@ var WsControllerSupport = function() {
 		selectedItemView.add(new Kinetic.Rect({
 			name : 'selection',
 			stroke : 'red',
-			strokeWidth : 1
+			strokeWidth : 1.5
 		}));
 		pageIView.add(selectedItemView);
 		placeholderItemView = new Kinetic.Rect({
 			name : 'placeholderItemView',
-			fill : 'rgba(255, 255, 255, 0.5)',
 			stroke : 'red',
 			strokeWidth : 1,
 			dash : [8, 4]
@@ -292,10 +304,46 @@ var WsControllerSupport = function() {
 		pageIView.setZIndex(2);
 	};
 	
+	var focused = false;
+	self.isFocused = function() {
+		return focused;
+	};
+	self.focus = function() {
+		var $focusedWsController = $('.pd-ws-focused');
+		if ($focusedWsController.length !== 0) {
+			var focusedWsController = $focusedWsController.data('wsController');
+			if (focusedWsController === self) {
+				return;
+			}
+			focusedWsController.blur();
+		}
+		$viewContainer.addClass('pd-ws-focused');
+		self.updateViewGeometry();
+		self.fireSelectEvent(selectedItem);
+		focused = true;
+	};
+	self.blur = function(passOnFocus) {
+		if (!self.isFocused()) {
+			return;
+		}
+		if (passOnFocus) {
+			var $unfocusedWsControllers = $('.pd-ws:not(.pd-ws-focused)');
+			if ($unfocusedWsControllers.length !== 0) {
+				var unfocusedWsController = $unfocusedWsControllers.eq(0)
+					.data('wsController');
+				unfocusedWsController.focus();
+				return;
+			}
+		}
+		$viewContainer.removeClass('pd-ws-focused');
+		self.fireSelectEvent();
+		focused = false;
+	};
+	
 	var selectEventListeners = [];
-    self.fireSelectEvent = function(selectedItem) {
+    self.fireSelectEvent = function(selected) {
 		for (var i in selectEventListeners) {
-			selectEventListeners[i].onSelect(self.getSelectedItem());
+			selectEventListeners[i].onSelect(selected);
 		}
     };
 	self.addSelectEventListener = function(listener) {
@@ -309,6 +357,7 @@ var WsControllerSupport = function() {
 		selectEventListeners.splice(index, 1);
 	};
 };
+
 WsControllerSupport.getEventTarget = function(e, matchFunction, breakFunction) {
 	var target = null;
 	var getParentFunctionName = null;
@@ -338,14 +387,14 @@ WsControllerSupport.getEventTarget = function(e, matchFunction, breakFunction) {
 	return null;
 };
 
-var WsController = function(viewContainer, model, themeManager) {
+var WsController = function($viewContainer, model, theme) {
 	var self = this;
-	self.createView(viewContainer);
+	self.createView($viewContainer);
 	self.setPageSize({
 		width : model.getWidth(),
 		height : model.getHeight()
 	});
-	self.setBgColor(themeManager.getTheme().bg);
+	self.setBgColor(theme.bgColor);
 	
 	var page = 0;
 	var pageView = self.getPageView();
@@ -353,7 +402,10 @@ var WsController = function(viewContainer, model, themeManager) {
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
 		onKeydown : function(e) {
-			//console.log('onKeydown')
+			//console.log('onKeydown');
+			if (!self.isFocused()) {
+				return;
+			}
 			self.onKeydown(e);
 			if (e.isPropagationStopped()) {
 				return;
@@ -372,7 +424,6 @@ var WsController = function(viewContainer, model, themeManager) {
 			default:
 				break;
 			}
-			return;
 		},
 		onDropAccept : function($dragObject) {
 			return $dragObject.data('pdWsItem');
@@ -466,11 +517,7 @@ var WsController = function(viewContainer, model, themeManager) {
 			}
 		},
 	};
-	var themeManagerEventListener = {
-		onChange : function(theme, templates) {
-		}
-	};
-	viewContainer.pdDroppable({
+	$viewContainer.pdDroppable({
 		accept : eventListener.onDropAccept,
 		over : eventListener.onDropOver,
 		out : eventListener.onDropOut,
@@ -486,29 +533,39 @@ var WsController = function(viewContainer, model, themeManager) {
 	self.getSelectedItemView().on('dblclick.pdWsController',
 		eventListener.onSelectedItemViewDblClick);
 	model.addChangeEventListener(modelEventListener);
-	themeManager.addChangeEventListener(themeManagerEventListener);
 	
 	self.updateSelectedItem = function(update) {
-		WsController.cache.remove(self.getSelectedItem());
+		console.log('update')
+		var selectedItem = self.getSelectedItem();
+		WsController.cache.remove(selectedItem);
 		reneredItems = [];
 		if (!update) {
-			model.remove(self.getSelectedItem().p,
-				self.getSelectedItem().i);
+			model.remove(selectedItem.p, selectedItem.i);
 			model.store();
 			self.selectItem();
 			return;
 		}
-		$.extend(true, self.getSelectedItem(), update);
-		var wsItemFactory = WsItemFactory.forType(self.getSelectedItem().type);
-		var itemView = wsItemFactory.createView(self.getSelectedItem());
+		Object.extend(selectedItem, update, true);
+		if (selectedItem.w < 0) {
+			selectedItem.w = 0;
+		}
+		if (selectedItem.h < 0) {
+			selectedItem.h = 0;
+		}
+		console.log(selectedItem.w)
+		var wsItemFactory = WsItemFactory.forType(selectedItem.type);
+		var itemView = wsItemFactory.createView(selectedItem);
 		itemView.on('render', function() {
 			var selectedItem = self.getSelectedItem();
+		//console.log(selectedItem)
 			if (selectedItem.w > model.getWidth()) {
 				selectedItem.w = model.getWidth();
 			}
 			if (selectedItem.h > model.getHeight()) {
 				selectedItem.h = model.getHeight();
 			}
+		//console.log(selectedItem)
+
 			model.update(selectedItem.p, selectedItem.i);
 			model.store();
 			if (page != selectedItem.p) {
@@ -516,6 +573,7 @@ var WsController = function(viewContainer, model, themeManager) {
 				self.render(0);
 			}
 			self.selectItem(selectedItem);
+			self.fireSelectEvent(selectedItem);
 		});
 		wsItemFactory.render(itemView);
 	};
@@ -532,18 +590,12 @@ var WsController = function(viewContainer, model, themeManager) {
 		return true;
 	}
 	self.render = function(index) {
-		console.log(index);
 		var items = model.get(page);
-		console.log('==');
-		console.log(items.length);
-		console.log(reneredItems.length);
 		if (items.length) {
 			items = items.slice(index);
 			if (compareItemArrays(items, reneredItems)) {
-				console.log('return');
 				return;
 			}
-			console.log('render');
 			var itemViews = pageView.getChildren(function(node) {
 				return node.getAttr('model')
 					&& node.getAttr('index') >= index;
@@ -582,7 +634,7 @@ var WsController = function(viewContainer, model, themeManager) {
 		pageView.batchDraw();
 	};
 	
-	self.updateViewGeometry();
+	self.focus();
 	self.render(0);
 };
 
@@ -618,14 +670,13 @@ WsController.cache = (function(){
 	};
 })();
 
-var WsTemplateController = function(viewContainer, themeManager) {
+var WsTemplateController = function($viewContainer) {
 	var self = this;
-	self.createView(viewContainer);
+	self.createView($viewContainer);
 	var model = null;
 	var pageView = self.getPageView();
 	
-	function addItem(item) {
-		model.items.push(item);
+	function renderItem(item) {
 		var wsItemFactory = WsItemFactory.forType(item.type);
 		var itemView = wsItemFactory.createView(item);
 		wsItemFactory.render(itemView);
@@ -645,7 +696,11 @@ var WsTemplateController = function(viewContainer, themeManager) {
 			item.y = position.y;
 			self.selectItem(item);
 		});
-		pageView.draw();
+	}
+	function addItem(item) {
+		model.items.push(item);
+		renderItem(item);
+		pageView.batchDraw();
 	}
 	function removeItem(item) {
 		var index = model.items.indexOf(item);
@@ -655,12 +710,15 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		model.items.splice(index, 1);
 		var itemView = self.getItemView(item);
 		itemView.remove();
-		pageView.draw();
+		pageView.batchDraw();
 	}
 	
 	var eventListener = {
 		onKeydown : function(e) {
-			//console.log('onKeydown')
+			//console.log('onKeydown');
+			if (!self.isFocused()) {
+				return;
+			}
 			self.onKeydown(e);
 			if (e.isPropagationStopped()) {
 				return;
@@ -675,7 +733,6 @@ var WsTemplateController = function(viewContainer, themeManager) {
 			default:
 				break;
 			}
-			return;
 		},
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
 		onSelectedItemViewMousedown : function(data) {
@@ -718,17 +775,34 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		}
 	};
 	
-	viewContainer.pdDroppable({
+	$viewContainer.pdDroppable({
 		accept : eventListener.onDropAccept,
 		over : eventListener.onDropOver,
 		out : eventListener.onDropOut,
 		move : eventListener.onDropMove,
 		drop : eventListener.onDrop,
 	});
+	
+	$(window).on('resize.pdWsTemplateController', self.onWindowResize);
+	$(window).on('keydown.pdWsTemplateController', eventListener.onKeydown);
+	$(document.body).on('click.pdWsTemplateController', self.onBodyClick);
+	self.getPageView().on('click.pdWsTemplateController',
+		self.onPageViewClick);
+	self.getPageBgView().on('click.pdWsTemplateController',
+		self.onPageBgViewClick);
+	self.getSelectedItemView().on('click.pdWsTemplateController',
+		self.onSelectedItemViewClick);
+	self.getSelectedItemView().on('dblclick.pdWsTemplateController',
+		eventListener.onSelectedItemViewDblClick);
+	self.getSelectedItemView().on('mousedown.pdWsTemplateController',
+		eventListener.onSelectedItemViewMousedown);
 			
 	self.open = function(template) {
+		if (model) {
+			self.close();
+		}
 		model = template;
-		if (typeof model.items !== 'array') {
+		if (!model.items) {
 			model.items = [];
 		}
 		self.setPageSize({
@@ -736,36 +810,20 @@ var WsTemplateController = function(viewContainer, themeManager) {
 			height : model.height
 		});
 		self.setBgColor(model.bgColor);
-		
-		$(window).on('resize.pdWsTemplateController', self.onWindowResize);
-		$(window).on('keydown.pdWsTemplateController', eventListener.onKeydown);
-		$(document.body).on('click.pdWsTemplateController', self.onBodyClick);
-		self.getPageView().on('click.pdWsTemplateController',
-			self.onPageViewClick);
-		self.getPageBgView().on('click.pdWsTemplateController',
-			self.onPageBgViewClick);
-		self.getSelectedItemView().on('click.pdWsTemplateController',
-			self.onSelectedItemViewClick);
-		self.getSelectedItemView().on('dblclick.pdWsTemplateController',
-			eventListener.onSelectedItemViewDblClick);
-		self.getSelectedItemView().on('mousedown.pdWsTemplateController',
-			eventListener.onSelectedItemViewMousedown);
-			
-		viewContainer.show();
-		self.updateViewGeometry();
+		if (self.isFocused()) {
+			self.updateViewGeometry();
+		} else {
+			self.focus();
+		}
+		self.render();
 	};
 	
 	self.close = function() {
-		viewContainer.hide();
-		$(window).off('.pdWsTemplateController');
-		$(document.body).on('.pdWsTemplateController');
-		self.getPageView().on('.pdWsTemplateController');
-		self.getPageBgView().on('.pdWsTemplateController');
-		self.getSelectedItemView().off('.pdWsTemplateController');
-		pageView.removeChildren();
-		pageView.draw();
+		self.selectItem();
 		self.fireChangeEvent();
 		model = null;
+		self.render();
+		self.blur(true);
 	};
 	
 	self.updateSelectedItem = function(update) {
@@ -776,13 +834,25 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		}
 		$.extend(true, self.getSelectedItem(), update);
 		var itemView = self.getItemView(self.getSelectedItem());
-		WsItemFactory.util.clearView(itemView);
+		var wsItemFactory = WsItemFactory.forType(self.getSelectedItem().type);
+		wsItemFactory.clearView(itemView);
 		itemView.on('render', function() {
 			self.selectItem(self.getSelectedItem());
 			pageView.batchDraw();
 			this.off('render');
 		});
-		WsItemFactory.forType(self.getSelectedItem().type).render(itemView);
+		wsItemFactory.render(itemView);
+	};
+	
+	self.render = function() {
+		pageView.removeChildren();
+		if (model && model.items) {
+			for (var i = 0; i < model.items.length; i++) {
+				var item = model.items[i];
+				renderItem(item);
+			}
+		}
+		pageView.batchDraw();
 	};
 	
 	var changeEventListeners = [];
@@ -801,8 +871,6 @@ var WsTemplateController = function(viewContainer, themeManager) {
 		}
 		changeEventListeners.splice(index, 1);
 	};
-	
-	viewContainer.hide();
 };
 
 WsTemplateController.inherits(WsControllerSupport);

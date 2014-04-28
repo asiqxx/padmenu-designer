@@ -47,6 +47,9 @@
 						$contents.hide();
 					}
 					
+					$self.on('selectstart.pdAccordion', function() {
+						return false;
+					});
 					$self.addClass('pd-panel pd-accordion');
 					
 					$self.data('pdAccordion', {
@@ -97,6 +100,7 @@
 			destroy : function() {
 				var $self = $(this);
 				
+				$self.off('.pdAccordion');
 				$self.removeClass('pd-panel pd-accordion');
 				$self.children('.pd-accordion-header')
 					.removeClass('pd-header pd-accordion-header')

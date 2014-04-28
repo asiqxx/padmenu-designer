@@ -66,7 +66,7 @@ Object.extend = function(target, source, overwrite) {
 			&& typeof source[i] === 'object' && target[i] !== null)
 			|| (typeof target[i] === 'array'
 			&& typeof source[i] === 'array')) {
-			Object.extend(target[i], source[i]);
+			Object.extend(target[i], source[i], overwrite);
 		} else if (typeof target[i] === 'undefined' || overwrite === true) {
 			target[i] = source[i];
 		}

@@ -2,6 +2,7 @@ jQuery(document).ready(function($) {
 	app = (function(){
 		var wsModel = null;
 		var wsController = null;
+		var wsTemplateController = null;
 		var themeManager = null;
 		var navigationManager = null;
 		var propertyBrowser = null;
@@ -13,7 +14,10 @@ jQuery(document).ready(function($) {
 					throwException('pd.app: Failed to load themes. Cause:\n'
 						+ error.message);
 				}
-				themeManager = new ThemeManager($('#ws-theme'), themes);
+				wsTemplateController = new WsTemplateController(
+					$('#ws-template'));
+				themeManager = new ThemeManager($('#theme'), themes,
+					wsTemplateController);
 				console.info('pd.app: Themes loaded.');
 				onLoad();
 			});
@@ -90,14 +94,23 @@ jQuery(document).ready(function($) {
 							themeManager.setTemplates(templates);
 							console.info('pd.app: Theme templates loaded.');
 						});
-					}
+					},
+					onTemplateSelect : function(template) {
+						if (template) {
+							wsTemplateController.open(template);
+						} else {
+							wsTemplateController.close();
+						}
+					},
 				};
 				themeManager.addThemeChangeEventListener(
 					themeManagerEventListener);
+				themeManager.addTemplateSelectEventListener(
+					themeManagerEventListener);
 				themeManager.setTheme(wsModel.get().theme);
 				wsController = new WsController($('#ws'), wsModel,
-					themeManager);
-				propertyBrowser = new PropertyBrowser($('#ws-properties'));
+					themeManager.getTheme());
+				propertyBrowser = new PropertyBrowser($('#properties'));
 				var wsControllerEventListener = {
 					onSelect : function(selectedItem) {
 						propertyBrowser.set(selectedItem,
@@ -105,14 +118,22 @@ jQuery(document).ready(function($) {
 					}
 				};
 				wsController.addSelectEventListener(wsControllerEventListener);
-
+				var wsTemplateControllerEventListener = {
+					onSelect : function(selectedItem) {
+						propertyBrowser.set(selectedItem,
+							wsTemplateController.updateSelectedItem);
+					}
+				};
+				wsTemplateController.addSelectEventListener(
+					wsTemplateControllerEventListener);
+				
 				$('#panel-west').pdAccordion();
 				var $toolbar = $('#panel-east').pdAccordion({
 					mode : 'multi',
 					collapsible : true
 				});
 				
-				$('#ws-primitives').pdToolbar({
+				$('#ws-items').pdToolbar({
 					source : [{
 						'name' : 'text',
 						'type' : 'class',

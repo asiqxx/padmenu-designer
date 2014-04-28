@@ -16,7 +16,7 @@ var TextWsItemFactory = function() {
 		var model = view.getAttr('model');
 		var text = new Kinetic.Text({
 			width : model.w ? model.w : 'auto',
-			height : model.h ? model.h : 'auto',
+			height : 'auto',
 			fill : model.color,
 			text : model.config.text.length
 				? model.config.text : ' Type here... ',
@@ -29,35 +29,12 @@ var TextWsItemFactory = function() {
 		this.uber('render', view);
 		view.fire('render');
 	};
-	this.createProperties = function(model, onChange) {
-		var properties = this.uber('createProperties', model, onChange);
-		var configTextProperty = WsItemFactory.util.property('config.text',
-			'Text', model.config.text, onChange);
-		configTextProperty.control.css({
-			'width' : '100%',
-			'height' : '200px'
-		});
-		return Object.extend(properties, {
-			'config.text' : {
-				label : 'Text',
-				control : $('<textarea rows="5"></textarea>').css({
-					'width' : '100%',
-					'resize' : 'none'
-				}).text(model.config.text).on('keyup', function() {
-					var text = $(this).val();
-					if (text.length === 0) {
-						onChange();
-					} else {
-						onChange({
-							h : 0,
-							config : {
-								text : text
-							}
-						});
-					}
-				})
-			}
-		});
+	this.createProperties = function(onChange) {
+		var properties = this.uber('createProperties', onChange);
+		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
+		var textProperty = propertiesBuilder.addTextProperty(
+			'config.text', 'Text', onChange); 
+		return properties;
 	};
 	function setSelectionRange($input, selectionStart, selectionEnd) {
 		var input = $input.get(0);
@@ -86,8 +63,8 @@ var TextWsItemFactory = function() {
 		}).appendTo($(document.body));
 		setSelectionRange($textarea, model.config.text.length, model.config.text.length);
 		var editor = new Kinetic.Rect({
-			fill : 'red',
-			opacity : 0.2
+			stroke : 'blue',
+			strokeWidth : 2,
 		});
 		editor.on('destroy', function() {
 			if ($textarea.val().length === 0) {

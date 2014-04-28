@@ -1,4 +1,4 @@
-padmenu-designer
+padmenu-designer-d2t
 ================
 
-Padmenu Designer
+Padmenu Designer D2T

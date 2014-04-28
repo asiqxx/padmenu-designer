@@ -9,8 +9,8 @@
 	<link rel="stylesheet" href="public/icons/icomoon/style.css">	
 	<script src="3rdparty/jquery-2.1.0.min.js"></script>
 	<script src="3rdparty/kinetic-v5.1.0.min.js"></script>
-	<script src="3rdparty/rgbcolor.js"></script>
-	<script src="3rdparty/dpd.js"></script>
+	<script src="3rdparty/TinyColor/tinycolor.js"></script>
+	<script src="http://www.thepadmenu.com/dpd.js"></script>
 	
 	<link rel="stylesheet" href="base.css">
 	<script src="base.js"></script>
@@ -24,17 +24,17 @@
 	<script src="ws/controller.js"></script>
 	<script src="ws/itemfactory.js"></script>
 	<script src="ws/item.js"></script>
-	<script src="ws/itemfactories/base.js"></script>
-	<script src="ws/itemfactories/text.js"></script>
-	<script src="ws/itemfactories/image.js"></script>
-	<script src="ws/theme/manager.js"></script>
-	<script src="ws/properties/browser.js"></script>
+	<script src="ws/items/base.js"></script>
+	<script src="ws/items/text.js"></script>
+	<script src="ws/items/image.js"></script>
+	<script src="theme/manager.js"></script>
+	<script src="property/browser.js"></script>
 	<link rel="stylesheet" href="app.css">
 	<script src="app.js"></script>
 </head>
 
 <body class="rasta">
-	<div class="layout layout-west">
+	<div class="pd-layout pd-layout-west">
 		<div id="logo">padmenu designer</div>
 		<div id="panel-west">
 			<h3>Price</h3>
@@ -43,27 +43,27 @@
 			</div>
 		</div>
 	</div>
-	<div class="layout layout-center">
-		<div id="ws-tabs"></div>
+	<div class="pd-layout pd-layout-center">
 		<div id="ws"></div>
+		<div id="ws-template"></div>
 	</div>
-	<div class="layout layout-east">
+	<div class="pd-layout pd-layout-east">
 		<div id="panel-east">
 			<h3>Theme</h3>
 			<div>
-				<div id="ws-theme"></div>
+				<div id="theme"></div>
 			</div>
 			<h3>Pages</h3>
 			<div>
-				<div id="ws-navigation"><br><br><br><br><br><br></div>
+				<div id="navigation"><br><br><br><br><br><br></div>
 			</div>
-			<h3>Blocks</h3>
+			<h3>Items</h3>
 			<div>
-				<div id="ws-primitives"></div>
+				<div id="ws-items"></div>
 			</div>
 			<h3>Properties</h3>
 			<div>
-				<div id="ws-properties"></div>
+				<div id="properties"></div>
 			</div>
 		</div>
 	</div>

@@ -1,3 +1,80 @@
+var WsItemPropertiesBuilder = function(properties) {	
+	function createUpdateObject(name, value) {
+		var updateObject = {};
+		var names = name.split('.');
+		updateObject[names[names.length - 1]] = value;
+		for (var i = 2; i < names.length + 1; i++) {
+			var object = {};
+			object[names[names.length - i]] = updateObject;
+			updateObject = object;
+		}
+		return updateObject;
+	}
+	
+	this.addStringProperty = function(name, label, onChange) {
+		var $control = $('<input type="text">');
+		if (onChange) {
+			$control.on('change', function() {
+				onChange(createUpdateObject(name, $(this).val()));
+			});
+		} else {
+			$control.attr('readonly', 'readonly');
+		}
+		properties[name] = {
+			name : name,
+			label : label,
+			control : $control
+		};
+		return properties[name];
+	};
+	this.addTextProperty = function(name, label, onChange) {
+		var $control = $('<textarea rows="5"></textarea>');
+		$control.css({
+			'width' : '100%',
+			'resize' : 'none'
+		});
+		if (onChange) {
+			$control.on('keyup', function() {
+				onChange(createUpdateObject(name, $(this).val()));
+			});
+		} else {
+			$control.attr('readonly', 'readonly');
+		}
+		properties[name] = {
+			name : name,
+			label : label,
+			control : $control
+		};
+		return properties[name];
+	};
+	this.addNumberProperty = function(name, label, onChange, min, max, step) {
+		var $control = $('<input type="number" min="'
+			+ min + '" max="' + max + '" step="' + step + '">');
+		if (onChange) {
+			$control.on('change', function() {
+				onChange(createUpdateObject(name, parseFloat($(this).val())));
+			});
+		} else {
+			$control.attr('readonly', 'readonly');
+		}
+		properties[name] = {
+			name : name,
+			label : label,
+			control : $control
+		};
+		return properties[name];
+	};
+	
+	this.setPropertyValue = function(name, model) {
+		var names = name.split('.');
+		var value = model[names[0]];
+		for (var i = 1; i < names.length; i++) {
+			value = value[names[i]];
+		}
+		properties[name].control.val(value);
+	};
+};
+
 var WsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
@@ -44,19 +121,27 @@ var WsItemFactory = function() {
 		});
 		view.setOpacity(model.opacity);
 	};
-	this.createProperties = function(model, onChange) {
-		return {
-			p : WsItemFactory.util.property('p', 'Page', model.p),
-			i : WsItemFactory.util.property('i', 'Index', model.i),
-			w : WsItemFactory.util.property('w', 'Width', model.w, onChange),
-			h : WsItemFactory.util.property('h', 'Height', model.h, onChange),
-			bg : WsItemFactory.util.property('bg', 'Background',
-				model.bg, onChange),
-			color : WsItemFactory.util.property('color', 'Color',
-				model.color, onChange),
-			opacity : WsItemFactory.util.property('opacity', 'Opacity',
-				model.opacity, onChange),
-		};
+	this.clearView = function(view) {
+		view.removeChildren();
+	};
+	this.createProperties = function(onChange) {
+		var properties = {};
+		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
+		propertiesBuilder.addNumberProperty('p', 'Page');
+		propertiesBuilder.addNumberProperty('i', 'Index');
+		propertiesBuilder.addNumberProperty('x', 'X', onChange);
+		propertiesBuilder.addNumberProperty('y', 'Y', onChange);
+		propertiesBuilder.addNumberProperty('w', 'Width', onChange);
+		propertiesBuilder.addNumberProperty('h', 'Height', onChange);
+		propertiesBuilder.addStringProperty('bg', 'Bg color', onChange);
+		propertiesBuilder.addStringProperty('color', 'Color', onChange);
+		propertiesBuilder.addNumberProperty('opacity', 'Opacity', onChange,
+			0, 1, 0.1);
+		return properties;
+	};
+	this.setPropertyValue = function(properties, name, model) {
+		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
+		propertiesBuilder.setPropertyValue(name, model);
 	};
 	this.createEditor = function(model, onChange) {
 		return null;
@@ -75,53 +160,4 @@ WsItemFactory.forType = function(type) {
 			+ 'Unknown item type "' + type + '"';
 	}
 	return new constructor();
-};
-
-WsItemFactory.util = {
-	parseString : function(value) {
-		return value;
-	},
-	parseBoolean : function(value) {
-		return value === 'true';
-	},
-	property : function(name, label, value, onChange) {
-		var control;
-		if (onChange) {
-			var inputType = 'text';
-			var parseFunction = WsItemFactory.util.parseString;
-			// The following input types are not supported by all browsers.
-			if (typeof value === 'number') {
-				//inputType = 'number';
-				parseFunction = parseFloat;
-			} else if (typeof value === 'boolean') {
-				//inputType = 'checkbox';
-				parseFunction = WsItemFactory.util.parseBoolean;
-			} else if (typeof value === 'string') {
-				if (value.match(/[#][a-fA-F0-9]{6}/)) {
-					//inputType = 'color';
-				}
-			}
-			control = $('<input type="' + inputType + '">')
-				.on('change', function() {
-				var model = {};
-				var names = name.split('.');
-				model[names[names.length - 1]] = parseFunction($(this).val());
-				for (var i = 2; i < names.length + 1; i++) {
-					var object = {};
-					object[names[names.length - i]] = model;
-					model = object;
-				}
-				onChange(model);
-			});
-		} else {
-			control = $('<input type="' + inputType + '" readonly=true>');
-		}
-		return {
-			label : label,
-			control : control.val(value)
-		};
-	},
-	clearView : function(view) {
-		view.removeChildren();
-	}
 };

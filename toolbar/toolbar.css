@@ -6,10 +6,10 @@
 
 .pd-toolbar-item {
 	float: left;
-	margin: 0.16em;
-	padding: 0.24em;
+	margin: 0.2em;
+	padding: 0.3em;
 	border: 0.1em solid;
-	font-size: 2em;
+	font-size: 1em;
 	line-height: 1em;
 	text-align: center;
 }

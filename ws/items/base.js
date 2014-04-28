@@ -2,9 +2,6 @@ var LsWsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
 			type : 'ls',
-			bg : '#FFFFFF',
-			borderColor : '#000000',
-			borderSize : 1,
 			zIndex : 2
 		});
 		return this.uber('createView', model);
@@ -40,9 +37,6 @@ var PsWsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
 			type : 'ps',
-			bg : '#FFFFFF',
-			borderColor : '#000000',
-			borderSize : 1,
 			zIndex : 2
 		});
 		return this.uber('createView', model);
