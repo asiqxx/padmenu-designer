@@ -64,6 +64,22 @@ var WsItemPropertiesBuilder = function(properties) {
 		};
 		return properties[name];
 	};
+	this.addColorProperty = function(name, label, onChange) {
+		var $control = $('<input type="color">');
+		if (onChange) {
+			$control.on('change', function() {
+				onChange(createUpdateObject(name, $(this).val()));
+			});
+		} else {
+			$control.attr('readonly', 'readonly');
+		}
+		properties[name] = {
+			name : name,
+			label : label,
+			control : $control
+		};
+		return properties[name];
+	};
 	
 	this.setPropertyValue = function(name, model) {
 		var names = name.split('.');
@@ -133,8 +149,8 @@ var WsItemFactory = function() {
 		propertiesBuilder.addNumberProperty('y', 'Y', onChange);
 		propertiesBuilder.addNumberProperty('w', 'Width', onChange);
 		propertiesBuilder.addNumberProperty('h', 'Height', onChange);
-		propertiesBuilder.addStringProperty('bg', 'Bg color', onChange);
-		propertiesBuilder.addStringProperty('color', 'Color', onChange);
+		propertiesBuilder.addColorProperty('bg', 'Bg color', onChange);
+		propertiesBuilder.addColorProperty('color', 'Color', onChange);
 		propertiesBuilder.addNumberProperty('opacity', 'Opacity', onChange,
 			0, 1, 0.1);
 		return properties;

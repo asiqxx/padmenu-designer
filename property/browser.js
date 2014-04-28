@@ -16,12 +16,9 @@ var PropertyBrowser = function($viewContainer) {
 		if (item) {
 			var wsItemFactory = WsItemFactory.forType(item.type);
 			if (currentItem === item) {
-				clearTimeout(updatePropertiesTimerId);
-				updatePropertiesTimerId = setTimeout(function() {
-					for (var key in properties) {
-						wsItemFactory.setPropertyValue(properties, key, item);
-					}
-				}, 100);
+				for (var key in properties) {
+					wsItemFactory.setPropertyValue(properties, key, item);
+				}
 				return;
 			}
 			$viewContainer.empty();

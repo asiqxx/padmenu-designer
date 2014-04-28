@@ -14,11 +14,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 	$viewContainer.append($themeChanger);
 	$viewContainer.append($('<hr/>'));
 	$viewContainer.append($('<div>Templates</div>'));
-	var $templateContainer =
-		$('<div class="pd-template-container"/>').on('click',
-		function() {
-			self.selectTemplate();
-		});
+	var $templateContainer = $('<div class="pd-template-container"/>');
 	$viewContainer.append($templateContainer);
 	$viewContainer.append($('<hr/>'));
 	var $templateToolbar = $('<div/>').pdToolbar({
@@ -58,6 +54,12 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 			templateSelectEventListeners[i].onTemplateSelect(selected);
 		}
     };
+    var templateDblClickEventListeners = [];
+    function fireTemplateDblClickEvent(template) {
+		for (var i in templateDblClickEventListeners) {
+			templateDblClickEventListeners[i].onTemplateDblClick(template);
+		}
+    };
 	var themeChangeEventListeners = [];
     function fireThemeChangeEvent() {
 		for (var i in themeChangeEventListeners) {
@@ -70,6 +72,12 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 			changeEventListeners[i].onChange(theme, templates);
 		}
     }
+    
+	$templateContainer.on('click', function() {
+		self.selectTemplate();
+	}).on('dblclick', function(e) {
+		fireTemplateDblClickEvent();
+	});
 	
 	this.setTheme = function(id) {
 		var newTheme = Object.findById(themes, id);
@@ -117,6 +125,14 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 				}
 				self.selectTemplate(template.name);
 				return false;
+			}).on('dblclick', function(e) {
+				var $target = $(e.target);
+				var template = $target.data('template');
+				if (!template) {
+					template = $target.parent().data('template');
+				}
+				fireTemplateDblClickEvent(template);
+				return false;
 			}).text(template.name).appendTo($templateContainer);		
 		templates.push(template);
 		templateMap[template.name] = template;
@@ -143,6 +159,16 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 			return;
 		}
 		templateSelectEventListeners.splice(index, 1);
+	};
+	self.addTemplateDblClickEventListener = function(listener) {
+		templateDblClickEventListeners.push(listener);
+	};
+	self.removeTemplateDblClickEventListener = function(listener) {
+		var index = templateDblClickEventListeners.indexOf(listener);
+		if (index == -1) {
+			return;
+		}
+		templateDblClickEventListeners.splice(index, 1);
 	};
 	this.addThemeChangeEventListener = function(listener) {
 		themeChangeEventListeners.push(listener);

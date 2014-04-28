@@ -143,6 +143,9 @@
 .pd-property-control[readonly=readonly] {
 	opacity: 0.5;
 }
+.pd-property-control[type=color] {
+	padding: 0 0.2em;
+}
 
 .rasta .rasta-color-green {
 	color : #9C9 !important;

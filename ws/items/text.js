@@ -31,6 +31,8 @@ var TextWsItemFactory = function() {
 	};
 	this.createProperties = function(onChange) {
 		var properties = this.uber('createProperties', onChange);
+		properties.h.control.attr('type', 'text');
+		properties.h.control.attr('readonly', 'readonly');
 		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
 		var textProperty = propertiesBuilder.addTextProperty(
 			'config.text', 'Text', onChange); 

@@ -82,6 +82,20 @@ jQuery(document).ready(function($) {
 				//~ wsModel.addStoreEventListener(wsModelEventListener);
 					
 				var themeManagerEventListener = {
+					onTemplateSelect : function(template) {
+						if (wsTemplateController.isFocused()) {
+							if (template) {
+								wsTemplateController.open(template);
+							} else {
+								wsTemplateController.close();
+							}
+						}
+					},
+					onTemplateDblClick : function(template) {
+						if (template) {
+							wsTemplateController.open(template);
+						}
+					},
 					onThemeChange : function(theme) {
 						console.info('pd.app: Loading theme templates...');
 						dpd.template.get({
@@ -94,18 +108,13 @@ jQuery(document).ready(function($) {
 							themeManager.setTemplates(templates);
 							console.info('pd.app: Theme templates loaded.');
 						});
-					},
-					onTemplateSelect : function(template) {
-						if (template) {
-							wsTemplateController.open(template);
-						} else {
-							wsTemplateController.close();
-						}
-					},
+					}
 				};
-				themeManager.addThemeChangeEventListener(
-					themeManagerEventListener);
 				themeManager.addTemplateSelectEventListener(
+					themeManagerEventListener);
+				themeManager.addTemplateDblClickEventListener(
+					themeManagerEventListener);
+				themeManager.addThemeChangeEventListener(
 					themeManagerEventListener);
 				themeManager.setTheme(wsModel.get().theme);
 				wsController = new WsController($('#ws'), wsModel,

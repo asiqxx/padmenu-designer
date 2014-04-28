@@ -44,6 +44,12 @@ var WsModel = function() {
     }
 
     function alignItem(page, index, item) {
+		if (item.w > data.width) {
+			item.w = data.width;
+		}
+		if (item.h > data.height) {
+			item.h = data.height;
+		}
 		if (index == 0) {
 			item.x = 0;
 			item.y = 0;
