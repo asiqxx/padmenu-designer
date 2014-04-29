@@ -43,9 +43,8 @@ var WsTemplateController = function($viewContainer) {
 	
 	var eventListener = {
 		onKeydown : function(e) {
-			//console.log('onKeydown');
 			if (!self.isFocused()) {
-				return;
+				return true;
 			}
 			self.onKeydown(e);
 			if (e.isPropagationStopped()) {
@@ -66,6 +65,9 @@ var WsTemplateController = function($viewContainer) {
 			}
 		},
 		onViewContainerDblClick : function(e) {
+			if (e.isPropagationStopped()) {
+				return false;
+			}
 			self.close();
 		},
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
@@ -80,16 +82,12 @@ var WsTemplateController = function($viewContainer) {
 			return $dragObject.data('pdWsItem');
 		},
 		onDropOver : function(e) {
-			//console.log('dropover');
 		},
 		onDropOut : function(e) {
-			//console.log('dropout');
 		},
 		onDropMove : function(e) {
-			//console.log('dropmove');
 		},
 		onDrop : function(e) {
-			//console.log('drop');
 			var dragObjectPosition = e.dragObject.offset();
 			var position = self.positionRelativeToPage({
 				x : dragObjectPosition.left,
@@ -132,7 +130,11 @@ var WsTemplateController = function($viewContainer) {
 		eventListener.onSelectedItemViewDblClick);
 	self.getSelectedItemView().on('mousedown.pdWsTemplateController',
 		eventListener.onSelectedItemViewMousedown);
-			
+	
+	self.getModel = function() {
+		return model;
+	};
+	
 	self.open = function(template) {
 		if (model) {
 			self.close();

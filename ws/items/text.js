@@ -18,11 +18,14 @@ var TextWsItemFactory = function() {
 			width : model.w ? model.w : 'auto',
 			height : 'auto',
 			fill : model.color,
-			text : model.config.text.length
-				? model.config.text : ' Type here... ',
+			text : model.config.text,
 			fontSize : model.config.fontSize,
 			fontFamily : model.config.fontFamily,
 		});
+		if (model.config.text.length === 0) {
+			text.setText(' Type here... ');
+			text.setOpacity(0.625);
+		}
 		view.add(text);
 		model.w = text.getWidth();
 		model.h = text.getHeight();
@@ -33,9 +36,8 @@ var TextWsItemFactory = function() {
 		var properties = this.uber('createProperties', onChange);
 		properties.h.control.attr('type', 'text');
 		properties.h.control.attr('readonly', 'readonly');
-		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
-		var textProperty = propertiesBuilder.addTextProperty(
-			'config.text', 'Text', onChange); 
+		PropertiesBuilder(properties)
+			.addTextProperty('config.text', 'Text', onChange);
 		return properties;
 	};
 	function setSelectionRange($input, selectionStart, selectionEnd) {

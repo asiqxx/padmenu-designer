@@ -1,11 +1,6 @@
 var WsController = function($viewContainer, model, theme) {
 	var self = this;
 	self.createView($viewContainer);
-	self.setPageSize({
-		width : model.getWidth(),
-		height : model.getHeight()
-	});
-	self.setBgColor(theme.bgColor);
 	
 	var page = 0;
 	var pageView = self.getPageView();
@@ -13,9 +8,8 @@ var WsController = function($viewContainer, model, theme) {
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
 		onKeydown : function(e) {
-			//console.log('onKeydown');
 			if (!self.isFocused()) {
-				return;
+				return true;
 			}
 			self.onKeydown(e);
 			if (e.isPropagationStopped()) {
@@ -40,7 +34,6 @@ var WsController = function($viewContainer, model, theme) {
 			return $dragObject.data('pdWsItem');
 		},
 		onDropOver : function(e) {
-			//console.log('dropover');
 			self.selectItem();
 			e.dragObject.off({
 				'destroy' : eventListener.onDrop
@@ -62,7 +55,6 @@ var WsController = function($viewContainer, model, theme) {
 			self.setPlaceholderItem(placeholderItem);
 		},
 		onDropOut : function(e) {
-			//console.log('dropout');
 			var placeholderItem = self.getPlaceholderItem();
 			if (placeholderItem.p != page || placeholderItem.i == -1) {
 				return;
@@ -72,7 +64,6 @@ var WsController = function($viewContainer, model, theme) {
 			}
 		},
 		onDropMove : function(e) {
-			//console.log('dropmove');
 			var dragObjectPosition = e.dragObject.offset();
 			var position = self.positionRelativeToPage({
 				x : dragObjectPosition.left,
@@ -93,7 +84,6 @@ var WsController = function($viewContainer, model, theme) {
 			}
 		},
 		onDrop : function(e) {
-			//console.log('drop');
 			var placeholderItem = self.getPlaceholderItem();
 			if (placeholderItem.p != page || placeholderItem.i == -1) {
 				var index = e.dragObject.data('index');
@@ -146,7 +136,7 @@ var WsController = function($viewContainer, model, theme) {
 	self.getSelectedItemView().on('dblclick.pdWsController',
 		eventListener.onSelectedItemViewDblClick);
 	model.addChangeEventListener(modelEventListener);
-	
+		
 	self.updateSelectedItem = function(update) {
 		var selectedItem = self.getSelectedItem();
 		reneredItems = [];
@@ -192,7 +182,6 @@ var WsController = function($viewContainer, model, theme) {
 		}
 		return true;
 	}
-	self.reneredItems = reneredItems;
 	self.render = function(index) {
 		var items = model.get(page);
 		if (items.length) {
@@ -234,8 +223,12 @@ var WsController = function($viewContainer, model, theme) {
 		}
 		pageView.batchDraw();
 	};
-	
-	self.focus();
+
+	self.setPageSize({
+		width : model.getWidth(),
+		height : model.getHeight()
+	});
+	self.setBgColor(theme.bgColor);
 	self.render(0);
 };
 

@@ -57,35 +57,63 @@ jQuery(document).ready(function($) {
 				var menuStoreEventTimerId = 0;
 				var wsModelEventListener = {
 					onStore : function(menu) {
-						console.info('pd.app: Save menu...');
 						clearTimeout(menuStoreEventTimerId);
-						menuStoreEventTimerId = setTimeout(
-							function() {
-								var menu = wsModel.get();
-								dpd.menu.put(menu.id, menu,
-									function(menu, error) {
-										if (error) {
-											console.error('pd.app: Failed to '
-												+ 'save menu. Cause:\n'
-												+ error.message);
-										} else {
-											console.info('pd.app: '
-												+ 'Model saved.');
-										}
-									}
-								);
-							},
-							1000
-						);
+						menuStoreEventTimerId = setTimeout(function() {
+							console.info('pd.app: Save menu...');
+							dpd.menu.put(menu, function(menu, error) {
+								if (error) {
+									console.error('pd.app: Failed to '
+										+ 'save menu. Cause:\n'
+										+ error.message);
+								} else {
+									console.info('pd.app: Model saved.');
+								}
+							});
+						}, 3000);
 					}
 				};
-				//~ wsModel.addStoreEventListener(wsModelEventListener);
-					
+				wsModel.addStoreEventListener(wsModelEventListener);
+				
+				var wsTemplateControllerProperties = {};
+				function setWsTemplateControllerPropertyValues(template) {
+					PropertiesBuilder(wsTemplateControllerProperties)
+						.setPropertyValues({
+							name : template.name,
+							bgColor : template.bgColor,
+						});
+				}
+				
 				var themeManagerEventListener = {
+					onTemplateCreate : function(template) {
+						console.info('pd.app: Save template...');
+						dpd.template.post(template, function(tpl, error) {
+							if (error) {
+								console.error('pd.app: Failed to '
+									+ 'save template. Cause:\n'
+									+ error.message);
+							} else {
+								template.id = tpl.id;
+								console.info('pd.app: Template saved.');
+							}
+						});
+					},
+					onTemplateRemove : function(template) {
+						console.info('pd.app: Remove template...');
+						dpd.template.del(template.id, function(tpl, error) {
+							if (error) {
+								console.error('pd.app: Failed to '
+									+ 'remove template. Cause:\n'
+									+ error.message);
+							} else {
+								console.info('pd.app: Template removed.');
+							}
+						});
+					},
 					onTemplateSelect : function(template) {
 						if (wsTemplateController.isFocused()) {
 							if (template) {
 								wsTemplateController.open(template);
+								setWsTemplateControllerPropertyValues(template);
 							} else {
 								wsTemplateController.close();
 							}
@@ -94,6 +122,7 @@ jQuery(document).ready(function($) {
 					onTemplateDblClick : function(template) {
 						if (template) {
 							wsTemplateController.open(template);
+							setWsTemplateControllerPropertyValues(template);
 						}
 					},
 					onThemeChange : function(theme) {
@@ -110,6 +139,10 @@ jQuery(document).ready(function($) {
 						});
 					}
 				};
+				themeManager.addTemplateCreateEventListener(
+					themeManagerEventListener);
+				themeManager.addTemplateRemoveEventListener(
+					themeManagerEventListener);
 				themeManager.addTemplateSelectEventListener(
 					themeManagerEventListener);
 				themeManager.addTemplateDblClickEventListener(
@@ -120,19 +153,108 @@ jQuery(document).ready(function($) {
 				wsController = new WsController($('#ws'), wsModel,
 					themeManager.getTheme());
 				propertyBrowser = new PropertyBrowser($('#properties'));
+				
+				var currentPropertyBrowserItem = null;
+				
+				function onWsControllerPropertyChange(update) {
+					if (update.bgColor) {
+						wsController.setBgColor(update.bgColor);
+						themeManager.getTheme().bgColor = update.bgColor;
+					}
+				}
+				var wsControllerProperties = {};
+				PropertiesBuilder(wsControllerProperties)
+					.addStringProperty('themeName', 'Theme')
+					.addStringProperty('themeDescription', 'Description')
+					.addColorProperty('bgColor', 'Bg Color',
+						onWsControllerPropertyChange)
+					.setPropertyValues({
+						themeName : themeManager.getTheme().name,
+						themeDescription : themeManager.getTheme().description,
+						bgColor : themeManager.getTheme().bgColor,
+					});
+				
 				var wsControllerEventListener = {
 					onSelect : function(selectedItem) {
-						propertyBrowser.set(selectedItem,
-							wsController.updateSelectedItem);
+						var properties = null;
+						if (selectedItem) {
+							var wsItemFactory = WsItemFactory
+								.forType(selectedItem.type);
+							if (currentPropertyBrowserItem === selectedItem) {
+								properties = propertyBrowser.get();
+							} else {
+								properties = wsItemFactory.createProperties(
+									wsController.updateSelectedItem);
+								properties = Object.extend({}, properties);
+								delete properties.x;
+								delete properties.y;
+							}
+							PropertiesBuilder(properties)
+								.setPropertyValues(selectedItem);
+						} else {
+							properties = wsControllerProperties;
+						}
+						propertyBrowser.set(properties);
+						currentPropertyBrowserItem = selectedItem;
 					}
 				};
 				wsController.addSelectEventListener(wsControllerEventListener);
+				
+				function onWsTemplateControllerPropertyChange(update) {
+					if (update.name) {
+						var oldName = wsTemplateController.getModel().name;
+						wsTemplateController.getModel().name = update.name;
+						themeManager.replaceTemplate(oldName,
+							wsTemplateController.getModel());
+					} else if (update.bgColor) {
+						wsTemplateController.bgColor = update.bgColor;
+						wsTemplateController.setBgColor(update.bgColor);
+					}
+				}
+				PropertiesBuilder(wsTemplateControllerProperties)
+					.addStringProperty('name', 'Name',
+						onWsTemplateControllerPropertyChange)
+					.addColorProperty('bgColor', 'Bg Color',
+						onWsTemplateControllerPropertyChange);
 				var wsTemplateControllerEventListener = {
+					onChange : function(template) {
+						console.info('pd.app: Save template...');
+						dpd.template.put(template, function(tpl, error) {
+							if (error) {
+								console.error('pd.app: Failed to '
+									+ 'save template. Cause:\n'
+									+ error.message);
+							} else {
+								template.id = tpl.id;
+								console.info('pd.app: Template saved.');
+							}
+						})
+					},
 					onSelect : function(selectedItem) {
-						propertyBrowser.set(selectedItem,
-							wsTemplateController.updateSelectedItem);
+						var properties = null;
+						if (selectedItem) {
+							var wsItemFactory = WsItemFactory
+								.forType(selectedItem.type);
+							if (currentPropertyBrowserItem === selectedItem) {
+								properties = propertyBrowser.get();
+							} else {
+								properties = wsItemFactory.createProperties(
+									wsTemplateController.updateSelectedItem);
+								properties = Object.extend({}, properties);
+								delete properties.p;
+								delete properties.i;
+							}
+							PropertiesBuilder(properties)
+								.setPropertyValues(selectedItem);
+						} else {
+							properties = wsTemplateControllerProperties;
+						}
+						propertyBrowser.set(properties);
+						currentPropertyBrowserItem = selectedItem;
 					}
 				};
+				wsTemplateController.addChangeEventListener(
+					wsTemplateControllerEventListener);
 				wsTemplateController.addSelectEventListener(
 					wsTemplateControllerEventListener);
 				
@@ -199,6 +321,9 @@ jQuery(document).ready(function($) {
 						}
 					}]
 				});
+				
+				wsController.focus();
+				propertyBrowser.set(wsControllerProperties);
 				
 				$(document.body).css({
 					'visibility' : 'visible'

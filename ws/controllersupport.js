@@ -129,7 +129,6 @@ var WsControllerSupport = function() {
 			return;
 		}
 		editor.setSize(selectedItemView.getSize());
-		editor.setAttr('preventDestroy', true);
 		selectedItemView.add(editor);
 		editor.fire('create');
 		pageIView.batchDraw();
@@ -152,28 +151,51 @@ var WsControllerSupport = function() {
 		var placeholderItemViewBgColor = tinycolor(color);
 		placeholderItemViewBgColor.setAlpha(0.625);
 		placeholderItemView.fill(placeholderItemViewBgColor.toRgbString());
+		pageBgView.draw();
+	};
+	
+	var clickEventPropagationStopped = false;
+	self.isClickEventPropagationStopped = function() {
+		if (clickEventPropagationStopped) {
+			clickEventPropagationStopped = false;
+			return true;
+		}
+		return false;
+	};
+	self.stopClickEventPropagation = function() {
+		clickEventPropagationStopped = true;
+	};
+	var dblClickEventPropagationStopped = false;
+	self.isDblClickEventPropagationStopped = function() {
+		if (dblClickEventPropagationStopped) {
+			dblClickEventPropagationStopped = false;
+			return true;
+		}
+		return false;
+	};
+	self.stopDblClickEventPropagation = function() {
+		dblClickEventPropagationStopped = true;
 	};
 	
 	var windowResizeEventTimerId = 0;
 	self.onWindowResize = function() {
 		clearTimeout(windowResizeEventTimerId);
 		if (!self.isFocused()) {
-			return;
+			return true;
 		}
 		windowResizeEventTimerId = setTimeout(function() {
 			self.updateViewGeometry();
 		}, 250);
 	};
 	self.onKeydown = function(e) {
-		//console.log('onKeydown');
 		if (!self.isFocused()) {
-			return;
+			return true;
 		}
 		switch (e.which) {
 		case 27:
 			if (editor) {
-				e.stopPropagation();
 				self.destroyEditor();
+				e.stopPropagation();
 			}
 			break;
 		default:
@@ -181,28 +203,18 @@ var WsControllerSupport = function() {
 		}
 	};
 	self.onBodyClick = function(e) {
-		//console.log('onBodyClick');
 		if (!self.isFocused()) {
-			return;
+			return true;
 		}
-		if (editor) {
-			if (editor.getAttr('preventDestroy') === true) {
-				editor.setAttr('preventDestroy', false);
-				return;
-			}
-			e.stopPropagation();
-			self.destroyEditor();
-		}
+		self.destroyEditor();
 	};
 	self.onPageBgViewClick = function(data) {
-		//console.log('onPageBgViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
 		self.selectItem();
-	},
+	};
 	self.onPageViewClick = function(data) {
-		//console.log('onPageViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -214,18 +226,15 @@ var WsControllerSupport = function() {
 			}
 		);
 		self.selectItem(itemView.getAttr('model'));
-	},
+		self.stopClickEventPropagation();
+	};
 	self.onSelectedItemViewClick = function(data) {
-		//console.log('onSelectedItemViewClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
-		if (editor !== null) {
-			editor.setAttr('preventDestroy', true);
-		}
+		self.stopClickEventPropagation();
 	}
 	self.onSelectedItemViewDblClick = function(data) {
-		//console.log('onSelectedItemViewDblClick');
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -233,6 +242,14 @@ var WsControllerSupport = function() {
 			return;
 		}
 		self.createEditor(this.updateSelectedItem);
+		self.stopDblClickEventPropagation();
+	};
+	
+	function stopEventPropagation(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		e.cancelBubble = true;
+		return false;
 	}
 	
 	var pageMargin = 20;
@@ -270,7 +287,17 @@ var WsControllerSupport = function() {
 				self.setPagePosition(newPosition);
 				view.batchDraw();
 			},
-		});
+		}).on('dblclick.pdWsControllerSupport',
+			function(e) {
+				if(self.isDblClickEventPropagationStopped()) {
+					stopEventPropagation(e);
+				}
+			}).on('click.pdWsControllerSupport',
+			function(e) {
+				if(self.isClickEventPropagationStopped()) {
+					stopEventPropagation(e);
+				}
+			});
 		view = new Kinetic.Stage({
 			container : $viewContainer.get(0)
 		});

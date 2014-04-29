@@ -1,96 +1,3 @@
-var WsItemPropertiesBuilder = function(properties) {	
-	function createUpdateObject(name, value) {
-		var updateObject = {};
-		var names = name.split('.');
-		updateObject[names[names.length - 1]] = value;
-		for (var i = 2; i < names.length + 1; i++) {
-			var object = {};
-			object[names[names.length - i]] = updateObject;
-			updateObject = object;
-		}
-		return updateObject;
-	}
-	
-	this.addStringProperty = function(name, label, onChange) {
-		var $control = $('<input type="text">');
-		if (onChange) {
-			$control.on('change', function() {
-				onChange(createUpdateObject(name, $(this).val()));
-			});
-		} else {
-			$control.attr('readonly', 'readonly');
-		}
-		properties[name] = {
-			name : name,
-			label : label,
-			control : $control
-		};
-		return properties[name];
-	};
-	this.addTextProperty = function(name, label, onChange) {
-		var $control = $('<textarea rows="5"></textarea>');
-		$control.css({
-			'width' : '100%',
-			'resize' : 'none'
-		});
-		if (onChange) {
-			$control.on('keyup', function() {
-				onChange(createUpdateObject(name, $(this).val()));
-			});
-		} else {
-			$control.attr('readonly', 'readonly');
-		}
-		properties[name] = {
-			name : name,
-			label : label,
-			control : $control
-		};
-		return properties[name];
-	};
-	this.addNumberProperty = function(name, label, onChange, min, max, step) {
-		var $control = $('<input type="number" min="'
-			+ min + '" max="' + max + '" step="' + step + '">');
-		if (onChange) {
-			$control.on('change', function() {
-				onChange(createUpdateObject(name, parseFloat($(this).val())));
-			});
-		} else {
-			$control.attr('readonly', 'readonly');
-		}
-		properties[name] = {
-			name : name,
-			label : label,
-			control : $control
-		};
-		return properties[name];
-	};
-	this.addColorProperty = function(name, label, onChange) {
-		var $control = $('<input type="color">');
-		if (onChange) {
-			$control.on('change', function() {
-				onChange(createUpdateObject(name, $(this).val()));
-			});
-		} else {
-			$control.attr('readonly', 'readonly');
-		}
-		properties[name] = {
-			name : name,
-			label : label,
-			control : $control
-		};
-		return properties[name];
-	};
-	
-	this.setPropertyValue = function(name, model) {
-		var names = name.split('.');
-		var value = model[names[0]];
-		for (var i = 1; i < names.length; i++) {
-			value = value[names[i]];
-		}
-		properties[name].control.val(value);
-	};
-};
-
 var WsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
@@ -142,22 +49,17 @@ var WsItemFactory = function() {
 	};
 	this.createProperties = function(onChange) {
 		var properties = {};
-		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
-		propertiesBuilder.addNumberProperty('p', 'Page');
-		propertiesBuilder.addNumberProperty('i', 'Index');
-		propertiesBuilder.addNumberProperty('x', 'X', onChange);
-		propertiesBuilder.addNumberProperty('y', 'Y', onChange);
-		propertiesBuilder.addNumberProperty('w', 'Width', onChange);
-		propertiesBuilder.addNumberProperty('h', 'Height', onChange);
-		propertiesBuilder.addColorProperty('bg', 'Bg color', onChange);
-		propertiesBuilder.addColorProperty('color', 'Color', onChange);
-		propertiesBuilder.addNumberProperty('opacity', 'Opacity', onChange,
-			0, 1, 0.1);
+		PropertiesBuilder(properties)
+		.addNumberProperty('p', 'Page')
+		.addNumberProperty('i', 'Index')
+		.addNumberProperty('x', 'X', onChange)
+		.addNumberProperty('y', 'Y', onChange)
+		.addNumberProperty('w', 'Width', onChange)
+		.addNumberProperty('h', 'Height', onChange)
+		.addColorProperty('bg', 'Bg Color', onChange)
+		.addColorProperty('color', 'Color', onChange)
+		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1);
 		return properties;
-	};
-	this.setPropertyValue = function(properties, name, model) {
-		var propertiesBuilder = new WsItemPropertiesBuilder(properties);
-		propertiesBuilder.setPropertyValue(name, model);
 	};
 	this.createEditor = function(model, onChange) {
 		return null;
