@@ -79,6 +79,8 @@ jQuery(document).ready(function($) {
 					PropertiesBuilder(wsTemplateControllerProperties)
 						.setPropertyValues({
 							name : template.name,
+							width : template.width,
+							height : template.height,
 							bgColor : template.bgColor,
 						});
 				}
@@ -158,19 +160,33 @@ jQuery(document).ready(function($) {
 				
 				function onWsControllerPropertyChange(update) {
 					if (update.bgColor) {
-						wsController.setBgColor(update.bgColor);
 						themeManager.getTheme().bgColor = update.bgColor;
+						wsController.setBgColor(update.bgColor);
+						console.info('pd.app: Save theme...');
+						dpd.theme.put(themeManager.getTheme(), function(theme, error) {
+							if (error) {
+								console.error('pd.app: Failed to '
+									+ 'save theme. Cause:\n'
+									+ error.message);
+							} else {
+								console.info('pd.app: Theme saved.');
+							}
+						});
 					}
 				}
 				var wsControllerProperties = {};
 				PropertiesBuilder(wsControllerProperties)
 					.addStringProperty('themeName', 'Theme')
 					.addStringProperty('themeDescription', 'Description')
+					.addNumberProperty('width', 'Width')
+					.addNumberProperty('height', 'Height')
 					.addColorProperty('bgColor', 'Bg Color',
 						onWsControllerPropertyChange)
 					.setPropertyValues({
 						themeName : themeManager.getTheme().name,
 						themeDescription : themeManager.getTheme().description,
+						width : themeManager.getTheme().width,
+						height : themeManager.getTheme().height,
 						bgColor : themeManager.getTheme().bgColor,
 					});
 				
@@ -202,10 +218,24 @@ jQuery(document).ready(function($) {
 				
 				function onWsTemplateControllerPropertyChange(update) {
 					if (update.name) {
-						var oldName = wsTemplateController.getModel().name;
-						wsTemplateController.getModel().name = update.name;
-						themeManager.replaceTemplate(oldName,
-							wsTemplateController.getModel());
+						themeManager.setTemplateName(
+							wsTemplateController.getModel(), update.name);
+					} else if (update.width) {
+						wsTemplateController.getModel().width = update.width;
+						wsTemplateController.setPageSize({
+							width : update.width,
+							height : wsTemplateController.getPageView()
+								.getHeight()
+						});
+						wsTemplateController.updateViewGeometry();
+					} else if (update.height) {
+						wsTemplateController.getModel().height = update.height;
+						wsTemplateController.setPageSize({
+							width : wsTemplateController.getPageView()
+								.getWidth(),
+							height : update.height
+						});
+						wsTemplateController.updateViewGeometry();
 					} else if (update.bgColor) {
 						wsTemplateController.bgColor = update.bgColor;
 						wsTemplateController.setBgColor(update.bgColor);
@@ -213,6 +243,10 @@ jQuery(document).ready(function($) {
 				}
 				PropertiesBuilder(wsTemplateControllerProperties)
 					.addStringProperty('name', 'Name',
+						onWsTemplateControllerPropertyChange)
+					.addNumberProperty('width', 'Width',
+						onWsTemplateControllerPropertyChange)
+					.addNumberProperty('height', 'Height',
 						onWsTemplateControllerPropertyChange)
 					.addColorProperty('bgColor', 'Bg Color',
 						onWsTemplateControllerPropertyChange);

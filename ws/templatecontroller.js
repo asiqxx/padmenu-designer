@@ -23,6 +23,7 @@ var WsTemplateController = function($viewContainer) {
 			item.x = position.x;
 			item.y = position.y;
 			self.selectItem(item);
+			self.fireSelectEvent(item);
 		});
 	}
 	function addItem(item) {

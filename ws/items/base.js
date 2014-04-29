@@ -2,7 +2,7 @@ var LsWsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
 			type : 'ls',
-			zIndex : 2
+			zIndex : 1
 		});
 		return this.uber('createView', model);
 	};
@@ -37,7 +37,7 @@ var PsWsItemFactory = function() {
 	this.createView = function(model) {
 		Object.extend(model, {
 			type : 'ps',
-			zIndex : 2
+			zIndex : 1
 		});
 		return this.uber('createView', model);
 	};

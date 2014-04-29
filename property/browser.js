@@ -14,7 +14,7 @@ var PropertyBrowser = function($viewContainer) {
 			return;
 		}
 		properties = newProperties;
-		$viewContainer.empty();
+		$viewContainer.children().detach();
 		if (!properties) {
 			return;
 		}

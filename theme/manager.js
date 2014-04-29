@@ -36,7 +36,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 					bgColor : 'transparent',
 				};
 				self.addTemplate(template);
-				self.selectTemplate(template.name);
+				self.selectTemplate(template);
 				wsTemplateController.open(template);
 			}
 		}, {
@@ -105,7 +105,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 				if (!template) {
 					template = $target.parent().data('template');
 				}
-				self.selectTemplate(template.name);
+				self.selectTemplate(template);
 				e.stopPropagation();
 				return false;
 			}).on('dblclick', function(e) {
@@ -133,11 +133,10 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 		return theme;
 	};
 	
-	this.selectTemplate = function(name) {
+	this.selectTemplate = function(template) {
 		if ($selectedTemplateView) {
 			$selectedTemplateView.removeClass('pd-template-view-selected');
 		}
-		var template = templateMap[name];
 		if (template) {
 			var $templateView = $templateContainer.children().filter(
 				function(i, element) {
@@ -182,24 +181,16 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 		$templateView.remove();
 		fireTemplateRemoveEvent(template);
 	};
-	this.replaceTemplate = function(name, template) {
-		var oldTemplate = templateMap[name];
-		if (typeof oldTemplate === 'undefined') {
+	this.setTemplateName = function(template, name) {
+		if (typeof templateMap[template.name] === 'undefined'
+			|| templateMap[template.name] !== template) {
 			return;
 		}
-		var index = templates.indexOf(oldTemplate);
-		if (index == -1) {
-			return;
-		}
-		var selectedTemplate = self.getSelectedTemplate();
-		delete templateMap[name];
+		delete templateMap[template.name];
+		template.name = name;
 		templateMap[template.name] = template;
-		templates.splice(index, 1, template);
-		$templateContainer.children().filter(function(i, element) {
-			return $(element).data('template') === oldTemplate;
-		}).replaceWith(createTemplateView(template));
-		if (selectedTemplate === oldTemplate) {
-			self.selectTemplate(template.name);
+		if (template === self.getSelectedTemplate()) {
+			$selectedTemplateView.text(template.name);
 		}
 	};
 	

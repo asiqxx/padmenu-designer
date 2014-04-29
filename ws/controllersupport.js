@@ -53,7 +53,7 @@ var WsControllerSupport = function() {
 			x : (view.getWidth() - pageView.getWidth()) / 2,
 			y : (view.getHeight() - pageView.getHeight()) / 2
 		});
-		view.batchDraw();
+		view.draw();
 	};
 	
 	self.getItemView = function(item) {
@@ -147,7 +147,6 @@ var WsControllerSupport = function() {
 	self.setBgColor = function(color) {
 		var pageBg = pageBgView.find('.bgColor');
 		pageBg.fill(color);
-		pageBg.cache();
 		var placeholderItemViewBgColor = tinycolor(color);
 		placeholderItemViewBgColor.setAlpha(0.625);
 		placeholderItemView.fill(placeholderItemViewBgColor.toRgbString());
@@ -215,6 +214,7 @@ var WsControllerSupport = function() {
 		self.selectItem();
 	};
 	self.onPageViewClick = function(data) {
+		console.log(data);
 		if (data.evt.which !== 1) {
 			return;
 		}
@@ -228,9 +228,23 @@ var WsControllerSupport = function() {
 		self.selectItem(itemView.getAttr('model'));
 		self.stopClickEventPropagation();
 	};
+	// TODO self.onPageViewDblClick
 	self.onSelectedItemViewClick = function(data) {
 		if (data.evt.which !== 1) {
 			return;
+		}
+		var itemView = WsControllerSupport.getEventTarget({
+				target : pageView.getIntersection(view.getPointerPosition())
+			},
+			function(target) {
+				return target.getAttr('model');
+			}, function(target) {
+				return target.getType() === 'Layer';
+			}
+		);
+		var itemModel = itemView.getAttr('model');
+		if (itemModel !== selectedItem) {
+			self.selectItem(itemModel);
 		}
 		self.stopClickEventPropagation();
 	}

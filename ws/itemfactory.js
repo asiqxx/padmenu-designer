@@ -13,7 +13,7 @@ var WsItemFactory = function() {
 			borderColor : 'transparent',
 			borderWidth : 0,
 			opacity : 1,
-			zIndex : 1,
+			zIndex : 0,
 			config : {}
 		});
 		var view = new Kinetic.Group();
@@ -43,6 +43,9 @@ var WsItemFactory = function() {
 			y : model.y
 		});
 		view.setOpacity(model.opacity);
+		if (typeof view.getParent() !== 'undefined') {
+			view.setZIndex(model.zIndex);
+		}
 	};
 	this.clearView = function(view) {
 		view.removeChildren();
@@ -58,7 +61,8 @@ var WsItemFactory = function() {
 		.addNumberProperty('h', 'Height', onChange)
 		.addColorProperty('bg', 'Bg Color', onChange)
 		.addColorProperty('color', 'Color', onChange)
-		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1);
+		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1)
+		.addNumberProperty('zIndex', 'ZIndex', onChange, 0, 255, 1);
 		return properties;
 	};
 	this.createEditor = function(model, onChange) {
