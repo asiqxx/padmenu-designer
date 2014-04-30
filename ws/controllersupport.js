@@ -31,6 +31,21 @@ var WsControllerSupport = function() {
 			y : position.y - viewContainerPosition.top - pageViewPosition.y
 		};
 	};
+	self.getItemViewByPosition = function(position) {
+		var target = pageView.getIntersection(position);
+		if (target === null) {
+			return null;
+		}
+		return WsControllerSupport.getEventTarget({
+				target : target
+			},
+			function(target) {
+				return target.getAttr('model');
+			}, function(target) {
+				return target.getType() === 'Layer';
+			}
+		);
+	};
 	
 	self.setPagePosition = function(position) {
 		pageView.setPosition(position);
@@ -42,6 +57,7 @@ var WsControllerSupport = function() {
 		pageBgView.setSize(size);
 		pageBgView.getChildren().setSize(size);
 		pageIView.setSize(size);
+		pageIView.find('.bg').setSize(size);
 	};
 	var isPageViewDraggingEnabled = false;
 	self.updateViewGeometry = function() {
@@ -190,64 +206,38 @@ var WsControllerSupport = function() {
 		if (!self.isFocused()) {
 			return true;
 		}
+		if (editor) {
+			e.stopPropagation();
+		}
 		switch (e.which) {
 		case 27:
-			if (editor) {
-				self.destroyEditor();
-				e.stopPropagation();
-			}
+			self.destroyEditor();
 			break;
 		default:
 			break;
 		}
 	};
-	self.onBodyClick = function(e) {
+	self.onBodyMousdown = function(e) {
 		if (!self.isFocused()) {
 			return true;
 		}
 		self.destroyEditor();
 	};
-	self.onPageBgViewClick = function(data) {
+	self.onPageIViewClick = function(data) {
 		if (data.evt.which !== 1) {
 			return;
 		}
-		self.selectItem();
-	};
-	self.onPageViewClick = function(data) {
-		console.log(data);
-		if (data.evt.which !== 1) {
+		var itemView = self.getItemViewByPosition(view.getPointerPosition());
+		if (itemView === null) {
+			self.selectItem();
 			return;
 		}
-		var itemView = WsControllerSupport.getEventTarget(data,
-			function(target) {
-				return target.getAttr('model');
-			}, function(target) {
-				return target.getType() === 'Layer';
-			}
-		);
-		self.selectItem(itemView.getAttr('model'));
-		self.stopClickEventPropagation();
-	};
-	// TODO self.onPageViewDblClick
-	self.onSelectedItemViewClick = function(data) {
-		if (data.evt.which !== 1) {
-			return;
-		}
-		var itemView = WsControllerSupport.getEventTarget({
-				target : pageView.getIntersection(view.getPointerPosition())
-			},
-			function(target) {
-				return target.getAttr('model');
-			}, function(target) {
-				return target.getType() === 'Layer';
-			}
-		);
 		var itemModel = itemView.getAttr('model');
 		if (itemModel !== selectedItem) {
 			self.selectItem(itemModel);
 		}
 		self.stopClickEventPropagation();
-	}
+	};
 	self.onSelectedItemViewDblClick = function(data) {
 		if (data.evt.which !== 1) {
 			return;
@@ -336,6 +326,11 @@ var WsControllerSupport = function() {
 			strokeWidth : 1.5
 		}));
 		pageIView.add(selectedItemView);
+		var pageIViewBg = new Kinetic.Rect({
+			name : 'bg'
+		});
+		pageIView.add(pageIViewBg);
+		pageIViewBg.moveToBottom();
 		placeholderItemView = new Kinetic.Rect({
 			name : 'placeholderItemView',
 			stroke : 'red',

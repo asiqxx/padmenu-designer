@@ -41,25 +41,17 @@ var WsController = function($viewContainer, model, theme) {
 			e.dragObject.on('destroy', eventListener.onDrop);
 			
 			var placeholderItem = e.dragObject.data('pdWsItem').view.getAttr('model');
-			if (placeholderItem.p != page || placeholderItem.i == -1) {
-				if (placeholderItem.w > model.getWidth()) {
-					placeholderItem.w = model.getWidth();
-				}
-				if (placeholderItem.h > model.getHeight()) {
-					placeholderItem.h = model.getHeight();
-				}
-			} else {
-				e.dragObject.data('index', placeholderItem.i);
-				redrawItem(placeholderItem);
+			if (placeholderItem.w > model.getWidth()) {
+				placeholderItem.w = model.getWidth();
+			}
+			if (placeholderItem.h > model.getHeight()) {
+				placeholderItem.h = model.getHeight();
 			}
 			self.setPlaceholderItem(placeholderItem);
 		},
 		onDropOut : function(e) {
 			var placeholderItem = self.getPlaceholderItem();
-			if (placeholderItem.p != page || placeholderItem.i == -1) {
-				return;
-			}
-			if (typeof e.dragObject.data('index') != 'number') {
+			if (placeholderItem.p === page || placeholderItem.i !== -1) {
 				model.remove(placeholderItem.p, placeholderItem.i);
 			}
 		},
@@ -85,13 +77,8 @@ var WsController = function($viewContainer, model, theme) {
 		},
 		onDrop : function(e) {
 			var placeholderItem = self.getPlaceholderItem();
-			if (placeholderItem.p != page || placeholderItem.i == -1) {
-				var index = e.dragObject.data('index');
-				if (typeof index == 'number') {
-					model.insert(page, index, placeholderItem);
-				} else {
-					WsController.cache.remove(placeholderItem);
-				}
+			if (placeholderItem.p !== page || placeholderItem.i === -1) {
+				WsController.cache.remove(placeholderItem);
 			} else {
 				model.store();
 			}
@@ -128,14 +115,62 @@ var WsController = function($viewContainer, model, theme) {
 	});
 	$(window).on('resize.pdWsController', self.onWindowResize);
 	$(window).on('keydown.pdWsController', eventListener.onKeydown);
-	$(document.body).on('click.pdWsController', self.onBodyClick);
-	self.getPageView().on('click.pdWsController', self.onPageViewClick);
-	self.getPageBgView().on('click.pdWsController', self.onPageBgViewClick);
-	self.getSelectedItemView().on('click.pdWsController',
-		self.onSelectedItemViewClick);
-	self.getSelectedItemView().on('dblclick.pdWsController',
-		eventListener.onSelectedItemViewDblClick);
+	$(document.body).on('mousedown.pdWsController', self.onBodyMousdown);
+	self.getPageIView().on('mousedown.pdWsController', self.onPageIViewClick);
 	model.addChangeEventListener(modelEventListener);
+	
+	var startDrag = false;
+	var draggingItemView = null;
+	self.getPageIView().on('mousedown.pdWsController', function(data) {
+		if (self.getEditor() !== null) {
+			return;
+		}
+		startDrag = true;
+	});
+	self.getPageIView().on('mousemove.pdWsController', function(data) {
+		if (!startDrag) {
+			return;
+		}
+		startDrag = false;
+		draggingItemView = self.getItemViewByPosition(
+			self.getView().getPointerPosition());
+		if (!draggingItemView) {
+			return;
+		}
+		self.setPlaceholderItem(draggingItemView.getAttr('model'));
+		draggingItemView = draggingItemView.clone().add(new Kinetic.Circle({
+			radius : 3,
+			fill : 'red'
+		}));
+		self.getPageIView().add(draggingItemView);
+		draggingItemView.on('dragmove', function(data) {
+			var position = draggingItemView.getPosition();
+			if (position.x < 0 || position.y < 0
+				|| position.x > pageView.getWidth()
+				|| position.y > pageView.getHeight()) {
+				return;
+			}
+			var placeholderItem = self.getPlaceholderItem();
+			placeholderItem.x = position.x;
+			placeholderItem.y = position.y;
+			model.realign(page, placeholderItem.i);
+		});
+		self.selectItem();
+		draggingItemView.setDragDistance(8);
+		draggingItemView.startDrag();
+	});
+	self.getPageIView().on('mouseup.pdWsController', function(data) {
+		startDrag = false;
+		if (!draggingItemView) {
+			return;
+		}
+		draggingItemView.remove();
+		draggingItemView.destroy();
+		draggingItemView = null;
+		self.selectItem(self.getPlaceholderItem());
+		self.setPlaceholderItem();
+		self.getPageView().draw();
+	});
 		
 	self.updateSelectedItem = function(update) {
 		var selectedItem = self.getSelectedItem();
@@ -154,9 +189,7 @@ var WsController = function($viewContainer, model, theme) {
 		if (selectedItem.h < 0) {
 			selectedItem.h = 0;
 		}
-		var wsItemFactory = WsItemFactory.forType(selectedItem.type);
-		var itemView = wsItemFactory.createView(selectedItem);
-		itemView.on('render', function() {
+		function onRender(itemView) {
 			WsController.cache.remove(selectedItem);
 			WsController.cache.add(itemView);
 			model.update(selectedItem.p, selectedItem.i);
@@ -167,6 +200,28 @@ var WsController = function($viewContainer, model, theme) {
 			self.selectItem(selectedItem);
 			self.fireSelectEvent(selectedItem);
 			model.store();
+		}
+		var wsItemFactory = WsItemFactory.forType(selectedItem.type);
+		var itemView = wsItemFactory.createView(selectedItem);
+		itemView.on('render', function() {
+			if (selectedItem.w < 1 || selectedItem.w > model.getWidth()) {
+				selectedItem.w = model.getWidth();
+				var itemView = wsItemFactory.createView(selectedItem);
+				itemView.on('render', function() {
+					onRender(itemView);
+				});
+				wsItemFactory.render(itemView);
+			} else if (selectedItem.h < 1
+				|| selectedItem.h > model.getHeight()) {
+				selectedItem.h = model.getHeight();
+				var itemView = wsItemFactory.createView(selectedItem);
+				itemView.on('render', function() {
+					onRender(itemView);
+				});
+				wsItemFactory.render(itemView);
+			} else {
+				onRender(this);
+			}
 		});
 		wsItemFactory.render(itemView);
 	};

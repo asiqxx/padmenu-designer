@@ -253,16 +253,30 @@ jQuery(document).ready(function($) {
 				var wsTemplateControllerEventListener = {
 					onChange : function(template) {
 						console.info('pd.app: Save template...');
-						dpd.template.put(template, function(tpl, error) {
-							if (error) {
-								console.error('pd.app: Failed to '
-									+ 'save template. Cause:\n'
-									+ error.message);
-							} else {
-								template.id = tpl.id;
-								console.info('pd.app: Template saved.');
-							}
-						})
+						console.info(template);
+						if (template.id) {
+							dpd.template.put(template, function(tpl, error) {
+								if (error) {
+									console.error('pd.app: Failed to '
+										+ 'save template. Cause:\n'
+										+ error.message);
+								} else {
+									template.id = tpl.id;
+									console.info('pd.app: Template saved.');
+								}
+							});
+						} else {
+							dpd.template.post(template, function(tpl, error) {
+								if (error) {
+									console.error('pd.app: Failed to '
+										+ 'save template. Cause:\n'
+										+ error.message);
+								} else {
+									template.id = tpl.id;
+									console.info('pd.app: Template saved.');
+								}
+							});
+						}
 					},
 					onSelect : function(selectedItem) {
 						var properties = null;

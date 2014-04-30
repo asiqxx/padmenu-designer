@@ -55,14 +55,14 @@ var WsItemFactory = function() {
 		PropertiesBuilder(properties)
 		.addNumberProperty('p', 'Page')
 		.addNumberProperty('i', 'Index')
-		.addNumberProperty('x', 'X', onChange)
-		.addNumberProperty('y', 'Y', onChange)
-		.addNumberProperty('w', 'Width', onChange)
-		.addNumberProperty('h', 'Height', onChange)
+		.addNumberProperty('x', 'X', onChange, 0, 10000, 1)
+		.addNumberProperty('y', 'Y', onChange, 0, 10000, 1)
+		.addNumberProperty('w', 'Width', onChange, 0, 10000, 1)
+		.addNumberProperty('h', 'Height', onChange, 0, 10000, 1)
 		.addColorProperty('bg', 'Bg Color', onChange)
 		.addColorProperty('color', 'Color', onChange)
 		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1)
-		.addNumberProperty('zIndex', 'ZIndex', onChange, 0, 255, 1);
+		.addNumberProperty('zIndex', 'ZIndex', onChange, -127, 127, 1);
 		return properties;
 	};
 	this.createEditor = function(model, onChange) {

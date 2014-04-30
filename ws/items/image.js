@@ -43,6 +43,22 @@ var ImageWsItemFactory = function() {
 			imageObject.src = model.config.src;
 		}
 	};
+	this.createProperties = function(onChange) {
+		var properties = this.uber('createProperties', onChange);
+		PropertiesBuilder(properties)
+			.addNumberProperty('config.x', 'X Offset', onChange,
+				0, 10000, 1);
+		PropertiesBuilder(properties)
+			.addNumberProperty('config.y', 'Y Offset', onChange,
+				0, 10000, 1);
+		PropertiesBuilder(properties)
+			.addNumberProperty('config.w', 'Image Width', onChange,
+				0, 10000, 1);
+		PropertiesBuilder(properties)
+			.addNumberProperty('config.h', 'Image Height', onChange,
+				0, 10000, 1);
+		return properties;
+	};
 };
 ImageWsItemFactory.inherits(WsItemFactory);
 ImageWsItemFactory.cache = {};

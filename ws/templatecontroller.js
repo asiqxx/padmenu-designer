@@ -42,6 +42,7 @@ var WsTemplateController = function($viewContainer) {
 		pageView.batchDraw();
 	}
 	
+	var draggingItemView = null;
 	var eventListener = {
 		onKeydown : function(e) {
 			if (!self.isFocused()) {
@@ -71,13 +72,29 @@ var WsTemplateController = function($viewContainer) {
 			}
 			self.close();
 		},
+		onSelectedItemViewClick : function(data) {
+			if (data.evt.which !== 1) {
+				return;
+			}
+			self.stopClickEventPropagation();
+		},
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
-		onSelectedItemViewMousedown : function(data) {
+		onPageIViewMousedown : function(data) {
 			if (self.getEditor() !== null) {
 				return;
 			}
-			var itemView = self.getItemView(self.getSelectedItem());
-			itemView.startDrag();
+			draggingItemView = self.getItemViewByPosition(
+				self.getView().getPointerPosition());
+		},
+		onPageIViewMousemove : function(data) {
+			if (!draggingItemView) {
+				return;
+			}
+			draggingItemView.startDrag();
+			draggingItemView = null;
+		},
+		onPageIViewMouseup : function(data) {
+			draggingItemView = null;
 		},
 		onDropAccept : function($dragObject) {
 			return $dragObject.data('pdWsItem');
@@ -118,19 +135,19 @@ var WsTemplateController = function($viewContainer) {
 	
 	$(window).on('resize.pdWsTemplateController', self.onWindowResize);
 	$(window).on('keydown.pdWsTemplateController', eventListener.onKeydown);
-	$(document.body).on('click.pdWsTemplateController', self.onBodyClick);
+	$(document.body).on('mousedown.pdWsTemplateController', self.onBodyMousdown);
 	$viewContainer.on('dblclick.pdWsTemplateController',
 		eventListener.onViewContainerDblClick);
-	self.getPageView().on('click.pdWsTemplateController',
-		self.onPageViewClick);
-	self.getPageBgView().on('click.pdWsTemplateController',
-		self.onPageBgViewClick);
-	self.getSelectedItemView().on('click.pdWsTemplateController',
-		self.onSelectedItemViewClick);
+	self.getPageIView().on('click.pdWsTemplateController',
+		self.onPageIViewClick);
 	self.getSelectedItemView().on('dblclick.pdWsTemplateController',
 		eventListener.onSelectedItemViewDblClick);
-	self.getSelectedItemView().on('mousedown.pdWsTemplateController',
-		eventListener.onSelectedItemViewMousedown);
+	self.getPageIView().on('mousedown.pdWsTemplateController',
+		eventListener.onPageIViewMousedown);
+	self.getPageIView().on('mousemove.pdWsTemplateController',
+		eventListener.onPageIViewMousemove);
+	self.getPageIView().on('mouseup.pdWsTemplateController',
+		eventListener.onPageIViewMouseup);
 	
 	self.getModel = function() {
 		return model;
