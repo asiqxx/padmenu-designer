@@ -48,23 +48,24 @@ var WsTemplateController = function($viewContainer) {
 			if (!self.isFocused()) {
 				return true;
 			}
-			self.onKeydown(e);
-			if (e.isPropagationStopped()) {
-				return;
+			if (!self.onKeydown(e)) {
+				return false;
 			}
 			switch (e.which) {
 			case 46:
 				if (self.getSelectedItem()) {
 					removeItem(self.getSelectedItem());
 					self.selectItem();
+					return false;
 				}
 				break;
 			case 27:
 				self.close();
-				break;
+				return false;
 			default:
 				break;
 			}
+			return true;
 		},
 		onViewContainerDblClick : function(e) {
 			if (e.isPropagationStopped()) {
@@ -174,9 +175,11 @@ var WsTemplateController = function($viewContainer) {
 		self.render();
 	};
 	
-	self.close = function() {
+	self.close = function(withoutSave) {
 		self.selectItem();
-		self.fireChangeEvent();
+		if (!withoutSave) {
+			self.fireChangeEvent();
+		}
 		model = null;
 		self.render();
 		self.blur(true);

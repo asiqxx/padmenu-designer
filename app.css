@@ -70,48 +70,124 @@
 .pd-theme-manager {
 	padding: 0.75em 1em;
 }
-.pd-theme-changer {
-	background-color: #282828;
-	color: #F5F5DC;
-	-webkit-box-shadow: 0px 0px 4px 1px #000;
-    -moz-box-shadow: 0px 0px 4px 1px #000;
-    box-shadow: 0px 0px 1px 1px #111;
-    border-top: 1px solid #333;
-	padding: 0.3em 0.6em;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	width: 100%;
-}
-.pd-theme-changer:active {
-}
 .pd-template-container {
-	background-color: #404040;
+	background-color: #282828;
 	-webkit-box-shadow: 0px 0px 8px 2px #181818 inset;
     -moz-box-shadow: 0px 0px 8px 2px #181818 inset;
     box-shadow: 0px 0px 8px 2px #181818 inset;
     border-bottom: 1px solid #404040;
-    padding: 0.75em;
+    padding: 1em 0.75em;
     margin: 0.5em 0;
     height: auto;
 }
-.pd-template-view {
-	background-color: #404040;
-	color: #F5F5DC;
+.pd-template {
+	background-color: #282828;
 	display: inline-block;
 	padding: 0.5em;
+	font-family: monospace;
 	font-size: 1em;
 	text-align: center;
 	position: relative;
-	z-index: 0;
 }
-.pd-template-view:hover {
+.pd-template:hover {
 	cursor: pointer;
 }
-.pd-template-view-selected {
+.pd-template-selected {
 	background-color: #FFF;
 	color: #222;
-    z-index: 1;
+}
+
+.pd-navigation-manager {
+	position: relative;
+	padding: 1em;
+}
+.pd-navigation-pages {
+	height: 5em;
+	position: relative;
+}
+.pd-navigation-page {
+	background-color: #FFF;
+	color: #222;
+	box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.5);
+	border: 1px solid #444;
+	width: 2.25em;
+	line-height: 3em;
+	font-size: 1em;
+	text-align: center;
+	font-family: monospace;
+	position : absolute;
+	left: 50%;
+	top: 50%;
+}
+.pd-navigation-page-previous-previous {
+	margin-left: -6em;
+	margin-top: -1.5em;
+	cursor: pointer;
+}
+.pd-navigation-page-previous {
+	margin-left: -3.75em;
+	margin-top: -1.5em;
+	cursor: pointer;
+}
+.pd-navigation-page-current {
+	font-size: 1.333333em;
+	margin-left: -1.125em;
+	margin-top: -1.5em;
+}
+.pd-navigation-page-next {
+	margin-left: 1.5em;
+	margin-top: -1.5em;
+	cursor: pointer;
+}
+.pd-navigation-page-next-next {
+	margin-left: 3.75em;
+	margin-top: -1.5em;
+	cursor: pointer;
+}
+.pd-navigation-arrow {
+	color: #F5F5DC;
+	font-size: 1.5em;
+	text-align: center;
+	line-height: 1em;
+	width: 1em;
+	position: absolute;
+	top: 50%;
+}
+.pd-navigation-arrow-left {
+	left: 0;
+	margin-left: -0.25em;
+	margin-top: -0.4em;
+	cursor: pointer;
+}
+.pd-navigation-arrow-right {
+	right: 0;
+	margin-right: -0.25em;
+	margin-top: -0.4em;
+	cursor: pointer;
+}
+.pd-navigation-arrow-up {
+	text-align: center;
+	line-height: 0.5em;
+	width: 100%;
+	position: static;
+}
+.pd-navigation-controls {
+	position: relative;
+	padding: 0.5em 1em;
+}
+.pd-navigation-control {
+
+}
+.pd-navigation-page-select {
+	width: 50%;
+	height: 1.5em;
+	display: inline-block;
+}
+.pd-navigation-page-counter {
+	width: 50%;
+	line-height: 1.5em;
+	text-align: right;
+	display: inline-block;
 }
 
 .pd-property-browser {

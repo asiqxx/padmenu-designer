@@ -87,42 +87,41 @@ jQuery(document).ready(function($) {
 				
 				var themeManagerEventListener = {
 					onTemplateCreate : function(template) {
-						console.info('pd.app: Save template...');
-						dpd.template.post(template, function(tpl, error) {
-							if (error) {
-								console.error('pd.app: Failed to '
-									+ 'save template. Cause:\n'
-									+ error.message);
-							} else {
-								template.id = tpl.id;
-								console.info('pd.app: Template saved.');
-							}
-						});
+						wsTemplateController.open(template);
 					},
 					onTemplateRemove : function(template) {
 						console.info('pd.app: Remove template...');
-						dpd.template.del(template.id, function(tpl, error) {
-							if (error) {
-								console.error('pd.app: Failed to '
-									+ 'remove template. Cause:\n'
-									+ error.message);
-							} else {
-								console.info('pd.app: Template removed.');
-							}
-						});
+						wsTemplateController.close(withoutSave = true);
+						if (template.id) {
+							dpd.template.del(template.id, function(tpl, error) {
+								if (error) {
+									console.error('pd.app: Failed to '
+										+ 'remove template. Cause:\n'
+										+ error.message);
+								} else {
+									console.info('pd.app: Template removed.');
+								}
+							});
+						} else {
+							console.info('pd.app: Template removed.');
+						}
 					},
 					onTemplateSelect : function(template) {
 						if (wsTemplateController.isFocused()) {
 							if (template) {
-								wsTemplateController.open(template);
-								setWsTemplateControllerPropertyValues(template);
+								if (template
+									!== wsTemplateController.getModel()) {
+									wsTemplateController.open(template);
+									setWsTemplateControllerPropertyValues(template);
+								}
 							} else {
 								wsTemplateController.close();
 							}
 						}
 					},
 					onTemplateDblClick : function(template) {
-						if (template) {
+						if (template
+							&& template !== wsTemplateController.getModel()) {
 							wsTemplateController.open(template);
 							setWsTemplateControllerPropertyValues(template);
 						}
@@ -152,8 +151,13 @@ jQuery(document).ready(function($) {
 				themeManager.addThemeChangeEventListener(
 					themeManagerEventListener);
 				themeManager.setTheme(wsModel.get().theme);
+				
+				navigationManager = new NavigationManager($('#navigation'));
 				wsController = new WsController($('#ws'), wsModel,
 					themeManager.getTheme());
+				wsController.addPagesChangeEventListener(navigationManager);
+				navigationManager.addPageSelectEventListener(wsController);
+				navigationManager.setPage(0);
 				propertyBrowser = new PropertyBrowser($('#properties'));
 				
 				var currentPropertyBrowserItem = null;
@@ -253,7 +257,6 @@ jQuery(document).ready(function($) {
 				var wsTemplateControllerEventListener = {
 					onChange : function(template) {
 						console.info('pd.app: Save template...');
-						console.info(template);
 						if (template.id) {
 							dpd.template.put(template, function(tpl, error) {
 								if (error) {

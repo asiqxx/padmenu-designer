@@ -8,37 +8,53 @@ var WsModel = function() {
 		var index = -1;
 
 		var i = 0;
-		while (i < data.pages[page].length && index == -1) {
+		var top = -1;
+		var rowHeight = 0;
+		while (i < data.pages[page].length && index === -1) {
 			var otherItem = data.pages[page][i];
-			if (item.x < (otherItem.x + otherItem.w / 2)
+			if (top !== otherItem.y) {
+				top = otherItem.y;
+				rowHeight = getRowHeight(page, i);
+			}
+			if (item.x < (otherItem.x + otherItem.w)
 				&& otherItem.x < (item.x + item.w)
-				&& item.y < (otherItem.y + otherItem.h)
+				&& item.y < (otherItem.y + rowHeight)
 				&& otherItem.y < (item.y + item.h)) {
-				index = i;
+				index = item.x < (otherItem.x + otherItem.w / 2) ? i : i + 1;
 			}
 			i++;
 		}
 
-		if (index == -1) {
+		if (index === -1) {
 			return data.pages[page].length;
 		}
 		return index;
     }
 
-    function getRowHeight(page, index) {
+    function getRowHeight(page, index, reverseLoop) {
 		var height = 0;
 		var y = data.pages[page][index].y;
 		var i = index;
-		while (i >= 0) {
+		var condition = function(i) {
+			return i < data.pages[page].length;
+		};
+		var step = 1;
+		if (reverseLoop) {
+			condition = function(i) {
+				return i >= 0;
+			};
+			step = -1;
+		}
+		while (condition(i)) {
 			var item = data.pages[page][i];
-			if (item.y != y) {
+			if (item.y !== y) {
 				break;
 			}
 			if (item.h > height
-				&& (item.type != 'ls' && item.type != 'ps')) {
+				&& (item.type !== 'ls' && item.type !== 'ps')) {
 				height = item.h;
 			}
-			i--;
+			i += step;
 		}
 		return height;
     }
@@ -50,26 +66,26 @@ var WsModel = function() {
 		if (item.h > data.height) {
 			item.h = data.height;
 		}
-		if (index == 0) {
+		if (index === 0) {
 			item.x = 0;
 			item.y = 0;
 		} else {
 			var prevItem = data.pages[page][index - 1];
-			if (prevItem.type == 'ps'/* && item.type != 'ps' */) {
+			if (prevItem.type === 'ps'/* && item.type != 'ps' */) {
 				return null;
 			}
-			if ((prevItem.type == 'ls'
+			if ((prevItem.type === 'ls'
 				|| (prevItem.x + prevItem.w + item.w) > data.width)
-				&& (item.type != 'ls' && item.type != 'ps')) {
+				&& (item.type !== 'ls' && item.type !== 'ps')) {
 				item.x = 0;
-				item.y = prevItem.y + getRowHeight(page, index - 1);
+				item.y = prevItem.y + getRowHeight(page, index - 1, true);
 			} else {
 				item.x = prevItem.x + prevItem.w;
 				item.y = prevItem.y;
 			}
 		}
 		if ((item.y
-			+ (item.type == 'ls' || item.type == 'ps' ? 0 : item.h))
+			+ (item.type === 'ls' || item.type === 'ps' ? 0 : item.h))
 			> data.height) {
 			return null;
 		}

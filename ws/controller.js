@@ -11,9 +11,8 @@ var WsController = function($viewContainer, model, theme) {
 			if (!self.isFocused()) {
 				return true;
 			}
-			self.onKeydown(e);
-			if (e.isPropagationStopped()) {
-				return;
+			if (!self.onKeydown(e)) {
+				return false;
 			}
 			switch (e.which) {
 			case 46:
@@ -24,11 +23,13 @@ var WsController = function($viewContainer, model, theme) {
 						self.getSelectedItem().i);
 					model.store();
 					self.selectItem();
+					return false;
 				}
 				break;
 			default:
 				break;
 			}
+			return true;
 		},
 		onDropAccept : function($dragObject) {
 			return $dragObject.data('pdWsItem');
@@ -96,6 +97,7 @@ var WsController = function($viewContainer, model, theme) {
 			if (page >= model.get().pages.length) {
 				page--;
 				self.render(0);
+				self.firePagesChangeEvent();
 				return;
 			}
 			if (range[0].p == page) {
@@ -106,6 +108,9 @@ var WsController = function($viewContainer, model, theme) {
 				self.render(0);
 			}
 		},
+		onPagesChange : function(pages) {
+			self.firePagesChangeEvent();
+		}
 	};
 	$viewContainer.pdDroppable({
 		accept : eventListener.onDropAccept,
@@ -116,16 +121,23 @@ var WsController = function($viewContainer, model, theme) {
 	$(window).on('resize.pdWsController', self.onWindowResize);
 	$(window).on('keydown.pdWsController', eventListener.onKeydown);
 	$(document.body).on('mousedown.pdWsController', self.onBodyMousdown);
-	self.getPageIView().on('mousedown.pdWsController', self.onPageIViewClick);
+	self.getPageIView().on('click.pdWsController', self.onPageIViewClick);
+	self.getSelectedItemView().on('dblclick.pdWsTemplateController',
+		eventListener.onSelectedItemViewDblClick);
 	model.addChangeEventListener(modelEventListener);
+	model.addPagesChangeEventListener(modelEventListener);
 	
 	var startDrag = false;
 	var draggingItemView = null;
 	self.getPageIView().on('mousedown.pdWsController', function(data) {
+		if (data.evt.which !== 1) {
+			return;
+		}
 		if (self.getEditor() !== null) {
 			return;
 		}
 		startDrag = true;
+		
 	});
 	self.getPageIView().on('mousemove.pdWsController', function(data) {
 		if (!startDrag) {
@@ -139,8 +151,10 @@ var WsController = function($viewContainer, model, theme) {
 		}
 		self.setPlaceholderItem(draggingItemView.getAttr('model'));
 		draggingItemView = draggingItemView.clone().add(new Kinetic.Circle({
-			radius : 3,
-			fill : 'red'
+			radius : 2.5,
+			fill : 'white',
+			stroke : 'grey',
+			strokeWidth : 0.5,
 		}));
 		self.getPageIView().add(draggingItemView);
 		draggingItemView.on('dragmove', function(data) {
@@ -153,7 +167,11 @@ var WsController = function($viewContainer, model, theme) {
 			var placeholderItem = self.getPlaceholderItem();
 			placeholderItem.x = position.x;
 			placeholderItem.y = position.y;
-			model.realign(page, placeholderItem.i);
+			if (placeholderItem.p != page || placeholderItem.i == -1) {
+				model.add(page, placeholderItem);
+			} else {
+				model.realign(page, placeholderItem.i);
+			}
 		});
 		self.selectItem();
 		draggingItemView.setDragDistance(8);
@@ -171,6 +189,14 @@ var WsController = function($viewContainer, model, theme) {
 		self.setPlaceholderItem();
 		self.getPageView().draw();
 	});
+	self.onPageSelect = function(selectedPage) {
+		if (selectedPage >= 0 && selectedPage < model.get().pages.length) {
+			page = selectedPage;
+			self.render(0);
+			self.firePagesChangeEvent();
+			self.selectItem(self.getSelectedItem());
+		}
+	};
 		
 	self.updateSelectedItem = function(update) {
 		var selectedItem = self.getSelectedItem();
@@ -193,9 +219,10 @@ var WsController = function($viewContainer, model, theme) {
 			WsController.cache.remove(selectedItem);
 			WsController.cache.add(itemView);
 			model.update(selectedItem.p, selectedItem.i);
-			if (page != selectedItem.p) {
+			if (page !== selectedItem.p) {
 				page = selectedItem.p;
 				self.render(0);
+				self.firePagesChangeEvent();
 			}
 			self.selectItem(selectedItem);
 			self.fireSelectEvent(selectedItem);
@@ -278,7 +305,25 @@ var WsController = function($viewContainer, model, theme) {
 		}
 		pageView.batchDraw();
 	};
-
+	
+	var pagesChangeEventListeners = [];
+    self.firePagesChangeEvent = function() {
+		for (var i in pagesChangeEventListeners) {
+			pagesChangeEventListeners[i].onPagesChange(page,
+				model.get().pages.length);
+		}
+    };
+	self.addPagesChangeEventListener = function(listener) {
+		pagesChangeEventListeners.push(listener);
+	};
+	self.removePagesChangeEventListener = function(listener) {
+		var index = pagesChangeEventListeners.indexOf(listener);
+		if (index == -1) {
+			return;
+		}
+		pagesChangeEventListeners.splice(index, 1);
+	};
+	
 	self.setPageSize({
 		width : model.getWidth(),
 		height : model.getHeight()

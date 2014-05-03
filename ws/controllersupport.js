@@ -22,13 +22,31 @@ var WsControllerSupport = function() {
 	self.getPageIView = function() {
 		return pageIView;
 	};
-	
+
+	var scale = 0;
+	self.getScale = function() {
+		return scale;
+	};
+	self.setScale = function(newScale) {
+		scale = newScale;
+		scaleObject = {
+			x : scale,
+			y : scale
+		};
+		pageView.setScale(scaleObject);
+		pageBgView.setScale(scaleObject);
+		pageIView.setScale(scaleObject);
+		self.updateViewGeometry();
+	};
 	self.positionRelativeToPage = function(position) {
 		var viewContainerPosition = $viewContainer.offset();
 		var pageViewPosition = pageView.getAbsolutePosition();
+		var safeScale = scale === 0 ? 1 : scale;
 		return {
-			x : position.x - viewContainerPosition.left - pageViewPosition.x,
-			y : position.y - viewContainerPosition.top - pageViewPosition.y
+			x : (position.x - viewContainerPosition.left - pageViewPosition.x)
+				/ safeScale,
+			y : (position.y - viewContainerPosition.top - pageViewPosition.y)
+				/ safeScale
 		};
 	};
 	self.getItemViewByPosition = function(position) {
@@ -59,15 +77,15 @@ var WsControllerSupport = function() {
 		pageIView.setSize(size);
 		pageIView.find('.bg').setSize(size);
 	};
-	var isPageViewDraggingEnabled = false;
 	self.updateViewGeometry = function() {
 		view.setSize({
 			width : $viewContainer.width(),
 			height : $viewContainer.height()
 		});
+		var safeScale = scale === 0 ? 1 : scale;
 		self.setPagePosition({
-			x : (view.getWidth() - pageView.getWidth()) / 2,
-			y : (view.getHeight() - pageView.getHeight()) / 2
+			x : (view.getWidth() - pageView.getWidth() * safeScale) / 2,
+			y : (view.getHeight() - pageView.getHeight() * safeScale) / 2
 		});
 		view.draw();
 	};
@@ -136,28 +154,30 @@ var WsControllerSupport = function() {
 		return editor;
 	};
 	self.createEditor = function(onChange) {
-		if (selectedItem === null) {
-			return;
+		if (editor !== null || selectedItem === null) {
+			return null;
 		}
 		editor = WsItemFactory.forType(selectedItem.type).createEditor(
 			selectedItem, onChange);
 		if (editor === null) {
-			return;
+			return null;
 		}
 		editor.setSize(selectedItemView.getSize());
 		selectedItemView.add(editor);
 		editor.fire('create');
 		pageIView.batchDraw();
+		return editor;
 	};
 	self.destroyEditor = function() {
 		if (editor === null) {
-			return;
+			return null;
 		}
 		var temporaryEditor = editor;
 		editor = null;
 		temporaryEditor.destroy();
 		temporaryEditor.fire('destroy');
 		pageIView.batchDraw();
+		return temporaryEditor;
 	};
 	
 	self.setBgColor = function(color) {
@@ -192,6 +212,13 @@ var WsControllerSupport = function() {
 		dblClickEventPropagationStopped = true;
 	};
 	
+	function stopEventPropagation(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		e.cancelBubble = true;
+		return false;
+	}
+	
 	var windowResizeEventTimerId = 0;
 	self.onWindowResize = function() {
 		clearTimeout(windowResizeEventTimerId);
@@ -206,16 +233,21 @@ var WsControllerSupport = function() {
 		if (!self.isFocused()) {
 			return true;
 		}
-		if (editor) {
-			e.stopPropagation();
-		}
 		switch (e.which) {
+		case 13:
+			if (selectedItem && self.createEditor(this.updateSelectedItem)) {
+				return stopEventPropagation(e);
+			}
+			break;
 		case 27:
-			self.destroyEditor();
+			if (selectedItem && self.destroyEditor()) {
+				return stopEventPropagation(e);
+			}
 			break;
 		default:
 			break;
 		}
+		return true;
 	};
 	self.onBodyMousdown = function(e) {
 		if (!self.isFocused()) {
@@ -242,19 +274,10 @@ var WsControllerSupport = function() {
 		if (data.evt.which !== 1) {
 			return;
 		}
-		if (editor !== null) {
-			return;
+		if (self.createEditor(this.updateSelectedItem)) {
+			self.stopDblClickEventPropagation();
 		}
-		self.createEditor(this.updateSelectedItem);
-		self.stopDblClickEventPropagation();
 	};
-	
-	function stopEventPropagation(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		e.cancelBubble = true;
-		return false;
-	}
 	
 	var pageMargin = 20;
 	self.createView = function($container) {
@@ -278,13 +301,16 @@ var WsControllerSupport = function() {
 					x : position.x + e.offset.left,
 					y : position.y + e.offset.top,
 				};
+				var safeScale = scale === 0 ? 1 : scale;
 				if (newPosition.x > pageMargin
-					|| newPosition.x + pageView.getWidth() + pageMargin
+					|| newPosition.x + pageView.getWidth() * safeScale
+						+ pageMargin
 					< view.getWidth()) {
 					newPosition.x = pageView.getPosition().x;
 				}
 				if (newPosition.y > pageMargin
-					|| newPosition.y + pageView.getHeight() + pageMargin
+					|| newPosition.y + pageView.getHeight() * safeScale
+						+ pageMargin
 					< view.getHeight()) {
 					newPosition.y = pageView.getPosition().y;
 				}
@@ -294,12 +320,12 @@ var WsControllerSupport = function() {
 		}).on('dblclick.pdWsControllerSupport',
 			function(e) {
 				if(self.isDblClickEventPropagationStopped()) {
-					stopEventPropagation(e);
+					return stopEventPropagation(e);
 				}
 			}).on('click.pdWsControllerSupport',
 			function(e) {
 				if(self.isClickEventPropagationStopped()) {
-					stopEventPropagation(e);
+					return stopEventPropagation(e);
 				}
 			});
 		view = new Kinetic.Stage({

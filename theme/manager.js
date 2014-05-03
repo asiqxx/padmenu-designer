@@ -1,22 +1,14 @@
-var ThemeManager = function($viewContainer, themes, wsTemplateController) {
+var ThemeManager = function($container, themes) {
 	var self = this;
 	var theme = null;
 	var templates = [];
 	var templateMap = {};
-	var $selectedTemplateView = null;
+	var $selectedTemplate = null;
 	
-	$viewContainer.addClass('pd-theme-manager');
-	//~ var $themeChanger = $('<select class="pd-theme-changer"/>');
-	//~ for (var i = 0; i < themes.length; i++) {
-		//~ var theme = themes[i];
-		//~ $themeChanger.append(new Option(theme.name, theme.id));
-	//~ }
-	//~ $viewContainer.append($themeChanger);
-	//~ $viewContainer.append($('<hr/>'));
-	$viewContainer.append($('<div>Templates</div>'));
+	$container.addClass('pd-theme-manager');
+	$container.append($('<div>Templates</div>'));
 	var $templateContainer = $('<div class="pd-template-container"/>');
-	$viewContainer.append($templateContainer);
-	$viewContainer.append($('<hr/>'));
+	$container.append($templateContainer);
 	var $templateToolbar = $('<div/>').pdToolbar({
 		source : [{
 			'name' : 'add',
@@ -37,7 +29,6 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 				};
 				self.addTemplate(template);
 				self.selectTemplate(template);
-				wsTemplateController.open(template);
 			}
 		}, {
 			'name' : 'remove',
@@ -52,7 +43,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 			}
 		}]
 	});
-	$viewContainer.append($templateToolbar);
+	$container.append($templateToolbar);
 
     var templateCreateEventListeners = [];
     function fireTemplateCreateEvent(template) {
@@ -98,7 +89,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 	});
 	
 	function createTemplateView(template) {
-		return $('<div class="pd-template-view"/>')
+		return $('<div class="pd-template"/>')
 			.data('template', template).on('click', function(e) {
 				var $target = $(e.target);
 				var template = $target.data('template');
@@ -134,38 +125,38 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 	};
 	
 	this.selectTemplate = function(template) {
-		if ($selectedTemplateView) {
-			$selectedTemplateView.removeClass('pd-template-view-selected');
+		if ($selectedTemplate) {
+			$selectedTemplate.removeClass('pd-template-selected');
 		}
 		if (template) {
-			var $templateView = $templateContainer.children().filter(
+			var $template = $templateContainer.children().filter(
 				function(i, element) {
 					return $(element).data('template') === template;
 				}
 			);
-			if ($templateView.length === 0) {
+			if ($template.length === 0) {
 				return;
 			}
-			$templateView.addClass('pd-template-view-selected');
-			$selectedTemplateView = $templateView;
+			$template.addClass('pd-template-selected');
+			$selectedTemplate = $template;
 		}
 		fireTemplateSelectEvent(template);
 	};
 	this.getSelectedTemplate = function() {
-		return $selectedTemplateView.data('template');
+		return $selectedTemplate.data('template');
 	};
 	this.getTemplate = function(name) {
 		return templateMap[name];
 	};
 	this.addTemplate = function(template) {
-		if (!template.id) {
-			fireTemplateCreateEvent(template);
-		}
-		var $templateView = createTemplateView(template)
+		var $template = createTemplateView(template)
 			.appendTo($templateContainer);		
 		templates.push(template);
 		templateMap[template.name] = template;
-		return $templateView;
+		if (!template.id) {
+			fireTemplateCreateEvent(template);
+		}
+		return $template;
 	};
 	this.removeTemplate = function(template) {
 		var index = templates.indexOf(template);
@@ -174,11 +165,11 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 		}
 		templates.splice(index, 1);
 		delete templateMap[template.name];
-		var $templateView = $templateContainer.children().filter(
+		var $template = $templateContainer.children().filter(
 			function(i, element) {
 				return $(element).data('template') === template;
 			});
-		$templateView.remove();
+		$template.remove();
 		fireTemplateRemoveEvent(template);
 	};
 	this.setTemplateName = function(template, name) {
@@ -190,7 +181,7 @@ var ThemeManager = function($viewContainer, themes, wsTemplateController) {
 		template.name = name;
 		templateMap[template.name] = template;
 		if (template === self.getSelectedTemplate()) {
-			$selectedTemplateView.text(template.name);
+			$selectedTemplate.text(template.name);
 		}
 	};
 	
