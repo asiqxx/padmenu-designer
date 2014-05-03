@@ -6,6 +6,7 @@ var WsControllerSupport = function() {
 	var pageView = null;
 	var pageBgView = null;
 	var pageIView = null;
+	var pageIViewPageView = null;
 	
 	self.getViewContainer = function() {
 		return $viewContainer;
@@ -35,7 +36,7 @@ var WsControllerSupport = function() {
 		};
 		pageView.setScale(scaleObject);
 		pageBgView.setScale(scaleObject);
-		pageIView.setScale(scaleObject);
+		pageIViewPageView.setScale(scaleObject);
 		self.updateViewGeometry();
 	};
 	self.positionRelativeToPage = function(position) {
@@ -58,7 +59,7 @@ var WsControllerSupport = function() {
 				target : target
 			},
 			function(target) {
-				return target.getAttr('model');
+				return target.getParent().getType() === 'Layer';
 			}, function(target) {
 				return target.getType() === 'Layer';
 			}
@@ -68,20 +69,21 @@ var WsControllerSupport = function() {
 	self.setPagePosition = function(position) {
 		pageView.setPosition(position);
 		pageBgView.setPosition(position);
-		pageIView.setPosition(position);
+		pageIViewPageView.setPosition(position);
 	};
 	self.setPageSize = function(size) {
 		pageView.setSize(size);
 		pageBgView.setSize(size);
 		pageBgView.getChildren().setSize(size);
-		pageIView.setSize(size);
-		pageIView.find('.bg').setSize(size);
+		pageIViewPageView.setSize(size);
 	};
 	self.updateViewGeometry = function() {
 		view.setSize({
 			width : $viewContainer.width(),
 			height : $viewContainer.height()
 		});
+		pageIView.setSize(view.getSize());
+		pageIView.find('.bg').setSize(pageIView.getSize());
 		var safeScale = scale === 0 ? 1 : scale;
 		self.setPagePosition({
 			x : (view.getWidth() - pageView.getWidth() * safeScale) / 2,
@@ -331,9 +333,11 @@ var WsControllerSupport = function() {
 		view = new Kinetic.Stage({
 			container : $viewContainer.get(0)
 		});
+		// Create PageView.
 		pageView = new Kinetic.Layer();
 		view.add(pageView);
 		pageView.setZIndex(1);
+		// Create PageBgView.
 		pageBgView = new Kinetic.Layer();
 		pageBgView.add(new Kinetic.Rect({
 			name : 'bgColor',
@@ -342,7 +346,11 @@ var WsControllerSupport = function() {
 		}));
 		view.add(pageBgView);
 		pageBgView.setZIndex(0);
+		// Create PageIView.
 		pageIView = new Kinetic.Layer();
+		pageIViewPageView = new Kinetic.Group({
+			name : 'pageView'
+		});
 		selectedItemView = new Kinetic.Group({
 			name : 'selectedItemView'
 		});
@@ -351,19 +359,20 @@ var WsControllerSupport = function() {
 			stroke : 'red',
 			strokeWidth : 1.5
 		}));
-		pageIView.add(selectedItemView);
-		var pageIViewBg = new Kinetic.Rect({
-			name : 'bg'
-		});
-		pageIView.add(pageIViewBg);
-		pageIViewBg.moveToBottom();
+		pageIViewPageView.add(selectedItemView);
 		placeholderItemView = new Kinetic.Rect({
 			name : 'placeholderItemView',
 			stroke : 'red',
 			strokeWidth : 1,
 			dash : [8, 4]
 		});
-		pageIView.add(placeholderItemView);
+		pageIViewPageView.add(placeholderItemView);
+		pageIView.add(pageIViewPageView);
+		var pageIViewBg = new Kinetic.Rect({
+			name : 'bg'
+		});
+		pageIView.add(pageIViewBg);
+		pageIViewBg.moveToBottom();
 		view.add(pageIView);
 		pageIView.setZIndex(2);
 	};

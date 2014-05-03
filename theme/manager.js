@@ -108,6 +108,17 @@ var ThemeManager = function($container, themes) {
 				fireTemplateDblClickEvent(template);
 				e.stopPropagation();
 				return false;
+			}).pdDraggable({
+				dragObject : function() {
+					return $('<div/>').pdWsItem({
+						model : {
+							type : 'template',
+							config : {
+								template : template
+							}
+						}
+					});
+				}
 			}).text(template.name);
 	}
 	

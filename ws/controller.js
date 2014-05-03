@@ -4,6 +4,7 @@ var WsController = function($viewContainer, model, theme) {
 	
 	var page = 0;
 	var pageView = self.getPageView();
+	var renderedFromIndex = -1;
 	var reneredItems = [];
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
@@ -14,20 +15,19 @@ var WsController = function($viewContainer, model, theme) {
 			if (!self.onKeydown(e)) {
 				return false;
 			}
-			switch (e.which) {
-			case 46:
-				if (self.getSelectedItem()) {
-					WsController.cache.remove(self.getSelectedItem());
-					reneredItems = [];
-					model.remove(self.getSelectedItem().p,
-						self.getSelectedItem().i);
-					model.store();
-					self.selectItem();
-					return false;
+			if (self.getSelectedItem()) {
+				switch (e.which) {
+				case 46:
+						WsController.cache.remove(self.getSelectedItem());
+						reneredItems = [];
+						model.remove(self.getSelectedItem().p,
+							self.getSelectedItem().i);
+						model.store();
+						self.selectItem();
+						return false;
+				default:
+					break;
 				}
-				break;
-			default:
-				break;
 			}
 			return true;
 		},
@@ -100,9 +100,9 @@ var WsController = function($viewContainer, model, theme) {
 				self.firePagesChangeEvent();
 				return;
 			}
-			if (range[0].p == page) {
+			if (range[0].p === page) {
 				self.render(range[0].i);
-			} else if (range[1].p == page) {
+			} else if (range[1].p === page) {
 				self.render(range[0].i);
 			} else {
 				self.render(0);
@@ -156,7 +156,7 @@ var WsController = function($viewContainer, model, theme) {
 			stroke : 'grey',
 			strokeWidth : 0.5,
 		}));
-		self.getPageIView().add(draggingItemView);
+		self.getPageIView().find('.pageView').add(draggingItemView);
 		draggingItemView.on('dragmove', function(data) {
 			var position = draggingItemView.getPosition();
 			if (position.x < 0 || position.y < 0
@@ -268,7 +268,8 @@ var WsController = function($viewContainer, model, theme) {
 		var items = model.get(page);
 		if (items.length) {
 			items = items.slice(index);
-			if (compareItemArrays(items, reneredItems)) {
+			if (index === renderedFromIndex
+				&& compareItemArrays(items, reneredItems)) {
 				return;
 			}
 			pageView.getChildren(function(node) {
@@ -297,10 +298,12 @@ var WsController = function($viewContainer, model, theme) {
 					self.setPlaceholderItem(item);
 				}
 			}
+			renderedFromIndex = index;
 			reneredItems = items;
 		} else {
 			self.setPlaceholderItem();
 			pageView.getChildren().remove();
+			renderedFromIndex = -1;
 			reneredItems = [];
 		}
 		pageView.batchDraw();

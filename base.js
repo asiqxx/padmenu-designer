@@ -58,6 +58,7 @@ Object.matches = function(object, criteria) {
 };
 
 Object.extend = function(target, source, overwrite) {
+	console.log('Object.extend')
 	for (var i in source) {
 		if (target[i] === source[i]) {
 			continue;
@@ -68,7 +69,13 @@ Object.extend = function(target, source, overwrite) {
 			&& typeof source[i] === 'array')) {
 			Object.extend(target[i], source[i], overwrite);
 		} else if (typeof target[i] === 'undefined' || overwrite === true) {
-			target[i] = source[i];
+			if (typeof source[i] === 'object' && source[i] !== null) {
+				console.log('Object.extend2')
+				target[i] = {};
+				Object.extend(target[i], source[i], overwrite);
+			} else {
+				target[i] = source[i];
+			}
 		}
 	}
 	return target;

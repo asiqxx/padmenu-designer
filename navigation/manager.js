@@ -13,7 +13,8 @@ var NavigationManager = function($container) {
 		self.setPage(page);
 	}
 	function onPageSelect(e) {
-		self.setPage(parseInt($(e.target).children('option:selected').val(), 10));
+		self.setPage(
+			parseInt($(e.target).children('option:selected').val(), 10) - 1);
 	}
 	
 	$container.addClass('pd-navigation-manager');
@@ -54,7 +55,8 @@ var NavigationManager = function($container) {
 	$container.append($('<hr/>'));
 	var $controls = $('<div class="pd-navigation-controls"/>');
 	var $pageSelect =
-		$('<select class="pd-navigation-page-select pd-navigation-control"/>');
+		$('<select class="pd-navigation-page-select pd-navigation-control"/>')
+			.on('click', onPageSelect);
 	$controls.append($pageSelect);
 	$pageCounter =
 		$('<span class="pd-navigation-page-counter pd-navigation-control"/>');

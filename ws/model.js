@@ -280,7 +280,6 @@ var WsModel = function() {
 				}
 			}
 		}
-
 		if (range) {
 			fireChangeEvent(range);
 		}

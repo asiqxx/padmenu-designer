@@ -23,7 +23,7 @@ var TextWsItemFactory = function() {
 			fontFamily : model.config.fontFamily,
 		});
 		if (model.config.text.length === 0) {
-			text.setText(' Type here... ');
+			text.setText('Type here...');
 			text.setOpacity(0.625);
 		}
 		view.add(text);
@@ -37,6 +37,9 @@ var TextWsItemFactory = function() {
 		properties.h.control.attr('type', 'text');
 		properties.h.control.attr('readonly', 'readonly');
 		PropertiesBuilder(properties)
+			.addStringProperty('config.fontFamily', 'Font', onChange)
+			.addNumberProperty('config.fontSize', 'Font Size', onChange,
+				1, 100000, 1)
 			.addTextProperty('config.text', 'Text', onChange);
 		return properties;
 	};

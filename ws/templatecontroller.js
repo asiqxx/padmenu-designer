@@ -51,20 +51,56 @@ var WsTemplateController = function($viewContainer) {
 			if (!self.onKeydown(e)) {
 				return false;
 			}
+			if (self.getEditor()) {
+				return false;
+			}
+			
 			switch (e.which) {
-			case 46:
-				if (self.getSelectedItem()) {
-					removeItem(self.getSelectedItem());
-					self.selectItem();
-					return false;
-				}
-				break;
 			case 27:
 				self.close();
 				return false;
 			default:
 				break;
 			}
+			
+			if (self.getSelectedItem()) {
+				switch (e.which) {
+				case 46:
+					removeItem(self.getSelectedItem());
+					self.selectItem();
+					return false;
+				case 27:
+					self.close();
+					return false;
+				case 37:
+					self.updateSelectedItem({
+						x : self.getSelectedItem().x - (e.shiftKey ? 10 : 1)
+					});
+					self.fireSelectEvent(self.getSelectedItem());
+					return false;
+				case 38:
+					self.updateSelectedItem({
+						y : self.getSelectedItem().y - (e.shiftKey ? 10 : 1)
+					});
+					self.fireSelectEvent(self.getSelectedItem());
+					return false;
+				case 39:
+					self.updateSelectedItem({
+						x : self.getSelectedItem().x + (e.shiftKey ? 10 : 1)
+					});
+					self.fireSelectEvent(self.getSelectedItem());
+					return false;
+				case 40:
+					self.updateSelectedItem({
+						y : self.getSelectedItem().y + (e.shiftKey ? 10 : 1)
+					});
+					self.fireSelectEvent(self.getSelectedItem());
+					return false;
+				default:
+					break;
+				}
+			}
+			
 			return true;
 		},
 		onViewContainerDblClick : function(e) {
@@ -98,7 +134,9 @@ var WsTemplateController = function($viewContainer) {
 			draggingItemView = null;
 		},
 		onDropAccept : function($dragObject) {
-			return $dragObject.data('pdWsItem');
+			return $dragObject.data('pdWsItem')
+				&& $dragObject.data('pdWsItem').view.getAttr('model').type
+					!== 'template';
 		},
 		onDropOver : function(e) {
 		},
@@ -175,9 +213,30 @@ var WsTemplateController = function($viewContainer) {
 		self.render();
 	};
 	
+	function normalizeModel() {
+		var items = [];
+		for (var i = 0; i < model.items.length; i++) {
+			var item = model.items[i];
+			item.i = 0;
+			for (var j = 0; j < model.items.length; j++) {
+				var otherItem = model.items[j];
+				if (otherItem === item) {
+					continue;
+				}
+				if (item.y > otherItem.y
+					|| (item.y === otherItem.y && item.x > otherItem.x)) {
+					item.i++;
+				}
+			}
+			items[item.i] = item;
+		}
+		model.items = items;
+	}
+	
 	self.close = function(withoutSave) {
 		self.selectItem();
 		if (!withoutSave) {
+			normalizeModel();
 			self.fireChangeEvent();
 		}
 		model = null;

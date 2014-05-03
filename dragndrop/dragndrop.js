@@ -58,7 +58,8 @@
 				offset : offset
 			}));
 
-			var $newDroppable = getCurrentDroppable(dragObjectPosition);
+			var $newDroppable = getCurrentDroppable(
+				$dragObject, dragObjectPosition);
 
 			if ($currentDroppable == null ? (null != $newDroppable)
 				: ($currentDroppable.get(0) !== ($newDroppable == null
@@ -179,20 +180,21 @@
 			}
 		}
 
-		function getCurrentDroppable(offset) {
+		function getCurrentDroppable($dragObject, offset) {
 			for (var i = 0; i < droppables.length; i++) {
 				var droppable = droppables[i];
-				// TODO use accept method
-				if (droppable.offsetParent === null
-					|| droppable === $element.get(0)) {
+				var droppableElement = droppable.target.get(0);
+				if (droppableElement.offsetParent === null
+					|| droppableElement === $element.get(0)
+					|| !droppable.options.accept($dragObject)) {
 					continue;
 				}
-				var boundingRect = droppable.getBoundingClientRect();
+				var boundingRect = droppableElement.getBoundingClientRect();
 				if (offset.left > boundingRect.left
 					&& offset.left < boundingRect.right
 					&& offset.top > boundingRect.top
 					&& offset.top < boundingRect.bottom) {
-					return $(droppable);
+					return droppable.target;
 				}
 			}
 			return null;
@@ -208,10 +210,10 @@
 				});
 			},
 			makeDroppable : function($element) {
-				droppables.push($element.get(0));
+				droppables.push($element.data('pdDroppable'));
 			},
 			unmakeDroppable : function($element) {
-				var index = droppables.indexOf($element.get(0));
+				var index = droppables.indexOf($element.data('pdDroppable'));
 				if (index == -1) {
 					return;
 				}

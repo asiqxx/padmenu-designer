@@ -5,6 +5,11 @@ var PropertyBrowser = function($viewContainer) {
 	var classes = ['rasta-color-green',
 		'rasta-color-yellow',
 		'rasta-color-red'];
+		
+	function stopEventPropagation(e) {
+		e.stopPropagation();
+		e.cancelBubble = true;
+	}
 	
 	this.get = function() {
 		return properties;
@@ -36,6 +41,12 @@ var PropertyBrowser = function($viewContainer) {
 			$property.append(control);
 			$viewContainer.append($property);
 		}
+		var $controls = $viewContainer.children()
+			.children('.pd-property-control');
+		$controls.off({
+			'keydown keypress keyup' : stopEventPropagation
+		});
+		$controls.on('keydown keypress keyup', stopEventPropagation);
 	};
 };
 

@@ -14,10 +14,7 @@ jQuery(document).ready(function($) {
 					throwException('pd.app: Failed to load themes. Cause:\n'
 						+ error.message);
 				}
-				wsTemplateController = new WsTemplateController(
-					$('#ws-template'));
-				themeManager = new ThemeManager($('#theme'), themes,
-					wsTemplateController);
+				themeManager = new ThemeManager($('#theme'), themes);
 				console.info('pd.app: Themes loaded.');
 				onLoad();
 			});
@@ -54,6 +51,10 @@ jQuery(document).ready(function($) {
 		(function load() {
 			wsModel = new WsModel();
 			loadMenu(function() {
+				navigationManager = new NavigationManager($('#navigation'));
+				propertyBrowser = new PropertyBrowser($('#properties'));
+				
+				// Init WsModel.
 				var menuStoreEventTimerId = 0;
 				var wsModelEventListener = {
 					onStore : function(menu) {
@@ -74,6 +75,7 @@ jQuery(document).ready(function($) {
 				};
 				wsModel.addStoreEventListener(wsModelEventListener);
 				
+				// Init WsTemplateController.
 				var wsTemplateControllerProperties = {};
 				function setWsTemplateControllerPropertyValues(template) {
 					PropertiesBuilder(wsTemplateControllerProperties)
@@ -84,7 +86,6 @@ jQuery(document).ready(function($) {
 							bgColor : template.bgColor,
 						});
 				}
-				
 				var themeManagerEventListener = {
 					onTemplateCreate : function(template) {
 						wsTemplateController.open(template);
@@ -152,13 +153,23 @@ jQuery(document).ready(function($) {
 					themeManagerEventListener);
 				themeManager.setTheme(wsModel.get().theme);
 				
-				navigationManager = new NavigationManager($('#navigation'));
+				function saveTheme() {
+					console.info('pd.app: Save theme...');
+					dpd.theme.put(themeManager.getTheme(), function(theme, error) {
+						if (error) {
+							console.error('pd.app: Failed to '
+								+ 'save theme. Cause:\n'
+								+ error.message);
+						} else {
+							console.info('pd.app: Theme saved.');
+						}
+					});
+				}
+				
+				// Init WsController.
 				wsController = new WsController($('#ws'), wsModel,
 					themeManager.getTheme());
 				wsController.addPagesChangeEventListener(navigationManager);
-				navigationManager.addPageSelectEventListener(wsController);
-				navigationManager.setPage(0);
-				propertyBrowser = new PropertyBrowser($('#properties'));
 				
 				var currentPropertyBrowserItem = null;
 				
@@ -166,16 +177,7 @@ jQuery(document).ready(function($) {
 					if (update.bgColor) {
 						themeManager.getTheme().bgColor = update.bgColor;
 						wsController.setBgColor(update.bgColor);
-						console.info('pd.app: Save theme...');
-						dpd.theme.put(themeManager.getTheme(), function(theme, error) {
-							if (error) {
-								console.error('pd.app: Failed to '
-									+ 'save theme. Cause:\n'
-									+ error.message);
-							} else {
-								console.info('pd.app: Theme saved.');
-							}
-						});
+						saveTheme();
 					}
 				}
 				var wsControllerProperties = {};
@@ -220,6 +222,9 @@ jQuery(document).ready(function($) {
 				};
 				wsController.addSelectEventListener(wsControllerEventListener);
 				
+				// Init WsTemplateController.
+				wsTemplateController = new WsTemplateController(
+					$('#ws-template'));
 				function onWsTemplateControllerPropertyChange(update) {
 					if (update.name) {
 						themeManager.setTemplateName(
@@ -308,6 +313,10 @@ jQuery(document).ready(function($) {
 					wsTemplateControllerEventListener);
 				wsTemplateController.addSelectEventListener(
 					wsTemplateControllerEventListener);
+					
+				// Init NavigationManager.
+				navigationManager.addPageSelectEventListener(wsController);
+				navigationManager.setPage(0);
 				
 				$('#panel-west').pdAccordion();
 				var $toolbar = $('#panel-east').pdAccordion({
