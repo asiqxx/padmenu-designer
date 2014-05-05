@@ -223,6 +223,36 @@
 	padding: 0.2em 0.4em;
 }
 
+.pd-price-service {
+	padding: 0.5em 1em;
+}
+
+.pd-price-service-item {
+	background-color: #696;
+	color: #222;
+	box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.5);
+	border: 1px solid #444;
+	width: 100%;
+	line-height: 1.5em;
+	font-size: 1em;
+	padding: 0 0.5em;
+	margin: 0.5em 0;
+	cursor: pointer;
+}
+.pd-price-service-category {
+	background-color: #DD4444;
+	font-size: 1.2em;
+}
+.pd-price-service-level-1 {
+	padding-left: 1em;
+}
+.pd-price-service-level-2 {
+	padding-left: 2em;
+}
+.pd-price-service-level-3 {
+	padding-left: 3em;
+}
+
 .rasta .rasta-color-green {
 	color : #9C9 !important;
 }

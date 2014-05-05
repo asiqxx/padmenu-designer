@@ -70,9 +70,9 @@ var ThemeManager = function($container, themes) {
 		}
     };
 	var themeChangeEventListeners = [];
-    function fireThemeChangeEvent() {
+    function fireThemeChangeEvent(onLoad) {
 		for (var i in themeChangeEventListeners) {
-			themeChangeEventListeners[i].onThemeChange(theme);
+			themeChangeEventListeners[i].onThemeChange(theme, onLoad);
 		}
     }
     var changeEventListeners = [];
@@ -122,14 +122,14 @@ var ThemeManager = function($container, themes) {
 			}).text(template.name);
 	}
 	
-	this.setTheme = function(id) {
+	this.setTheme = function(id, onLoad) {
 		var newTheme = Object.findById(themes, id);
 		if (!newTheme) {
 			throwException('pd.app: Failed to set theme.'
 				+ 'Cause:\nTheme with id "' + id + '" not found');
 		}
 		theme = newTheme;
-		fireThemeChangeEvent();
+		fireThemeChangeEvent(onLoad);
 	};
 	this.getTheme = function() {
 		return theme;

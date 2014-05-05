@@ -25,7 +25,11 @@ var WsController = function($viewContainer, model, theme) {
 						reneredItems = [];
 						model.remove(self.getSelectedItem().p,
 							self.getSelectedItem().i);
-						model.store();
+						$(window).triggerHandler($.Event('message', {
+							id : 'store',
+							ns : 'wscontroller',
+							state : model.get()
+						}));
 						self.selectItem();
 						return false;
 				default:
@@ -77,7 +81,7 @@ var WsController = function($viewContainer, model, theme) {
 				model.add(page, placeholderItem);
 			} else {
 				model.realign(page, placeholderItem.i);
-				if (placeholderItem.p !== page) {
+				if (placeholderItem.p !== page && placeholderItem.p !== -1) {
 					page = placeholderItem.p;
 					self.render(0);
 					self.firePagesChangeEvent();
@@ -89,7 +93,11 @@ var WsController = function($viewContainer, model, theme) {
 			if (placeholderItem.p !== page || placeholderItem.i === -1) {
 				WsController.cache.remove(placeholderItem);
 			} else {
-				model.store();
+				$(window).triggerHandler($.Event('message', {
+					id : 'store',
+					ns : 'wscontroller',
+					state : model.get()
+				}));
 			}
 			var itemView = self.getItemView(placeholderItem);
 			if (itemView) {
@@ -218,7 +226,11 @@ var WsController = function($viewContainer, model, theme) {
 				model.remove(item.p, item.i);
 				WsController.cache.remove(item);
 			}
-			model.store();
+			$(window).triggerHandler($.Event('message', {
+				id : 'store',
+				ns : 'wscontroller',
+				state : model.get()
+			}));
 			return;
 		}
 		for (var i = 0; i < items.length; i++) {
@@ -265,7 +277,11 @@ var WsController = function($viewContainer, model, theme) {
 			self.firePagesChangeEvent();
 		}
 		self.selectItem(self.getSelectedItem());
-		model.store();
+		$(window).triggerHandler($.Event('message', {
+			id : 'store',
+			ns : 'wscontroller',
+			state : model.get()
+		}));
 	};
 	
 	self.updateSelectedItem = function(update) {
@@ -275,7 +291,11 @@ var WsController = function($viewContainer, model, theme) {
 			model.remove(selectedItem.p, selectedItem.i);
 			self.selectItem();
 			WsController.cache.remove(selectedItem);
-			model.store();
+			$(window).triggerHandler($.Event('message', {
+				id : 'store',
+				ns : 'wscontroller',
+				state : model.get()
+			}));
 			return;
 		}
 		Object.extend(selectedItem, update, true);
@@ -296,7 +316,11 @@ var WsController = function($viewContainer, model, theme) {
 			}
 			self.selectItem(selectedItem);
 			self.fireSelectEvent(selectedItem);
-			model.store();
+			$(window).triggerHandler($.Event('message', {
+				id : 'store',
+				ns : 'wscontroller',
+				state : model.get()
+			}));
 		}
 		var wsItemFactory = WsItemFactory.forType(selectedItem.type);
 		var itemView = wsItemFactory.createView(selectedItem);

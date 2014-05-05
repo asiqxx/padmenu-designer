@@ -14,6 +14,7 @@ var WsItemFactory = function() {
 			borderWidth : 0,
 			opacity : 1,
 			zIndex : 0,
+			action : '',
 			config : {}
 		});
 		var view = new Kinetic.Group();
@@ -62,7 +63,8 @@ var WsItemFactory = function() {
 		.addColorProperty('bg', 'Bg Color', onChange)
 		.addColorProperty('color', 'Color', onChange)
 		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1)
-		.addNumberProperty('zIndex', 'ZIndex', onChange, -127, 127, 1);
+		.addNumberProperty('zIndex', 'ZIndex', onChange, -127, 127, 1)
+		.addStringProperty('action', 'Action', onChange);
 		return properties;
 	};
 	this.createEditor = function(model, onChange) {

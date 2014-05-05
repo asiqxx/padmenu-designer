@@ -1,8 +1,5 @@
-var WsModel = function() {
-	var data = null;
-	var states = [];
-	var stateIndex = -1;
-	var storeTimerId = 0;
+var WsModel = function(model) {
+	var data = model;
 
     function getPreferredIndex(page, item) {
 		var index = -1;
@@ -199,12 +196,6 @@ var WsModel = function() {
 			changeEventListeners[i].onChange(range);
 		}
     }
-    var storeEventListeners = [];
-    function fireStoreEvent() {
-		for (var i in storeEventListeners) {
-			storeEventListeners[i].onStore(data);
-		}
-    }
     
     var self = this;
 
@@ -319,61 +310,6 @@ var WsModel = function() {
 		return items;
 	};
 
-	this.store = function(state) {
-		clearTimeout(storeTimerId);
-		storeTimerId = setTimeout(function() {
-			if (state) {
-				states = [];
-				data = $.extend(true, {}, state);
-			} else {
-				if (stateIndex < states.length - 1) {
-					states.splice(stateIndex + 1, states.length - stateIndex - 1);
-				}
-				state = $.extend(true, {}, data);
-			}
-			
-			stateIndex = states.push(state) - 1;
-
-			fireStoreEvent();
-			
-			//sessionStorage.setItem('wsmodel.states', JSON.stringify(states));
-			//sessionStorage.setItem('wsmodel.state.index', stateIndex);
-		}, 250);
-	};
-	this.restore = function(offset) {
-		if (stateIndex < 0) {			
-			return;
-			var i = sessionStorage.getItem('wsmodel.state.index');
-			if (i === null) {
-				return;
-			}
-			var s = sessionStorage.getItem('wsmodel.states');
-			if (s === null) {
-				return;
-			}
-			stateIndex = parseInt(i);
-			states = JSON.parse(s);
-		}
-		
-		if (typeof offset == 'undefined') {
-			offset = -1;
-		}
-		
-		stateIndex += offset;
-		if (stateIndex < 0) {
-			stateIndex = 0;
-		}
-		if (stateIndex >= states.length) {
-			stateIndex = states.length - 1;
-		}
-
-		data = $.extend(true, {}, states[stateIndex]);
-
-		fireStoreEvent();
-		
-		//sessionStorage.setItem('wsmodel.state.index', stateIndex);
-	};
-
 	this.addPagesChangeEventListener = function(listener) {
 		pagesChangeEventListeners.push(listener);
 	};
@@ -393,15 +329,5 @@ var WsModel = function() {
 			return;
 		}
 		changeEventListeners.splice(index, 1);
-	};
-	this.addStoreEventListener = function(listener) {
-		storeEventListeners.push(listener);
-	};
-	this.removeStoreEventListeners = function(listener) {
-		var index = storeEventListeners.indexOf(listener);
-		if (index == -1) {
-			return;
-		}
-		storeEventListeners.splice(index, 1);
 	};
 };

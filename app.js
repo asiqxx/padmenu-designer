@@ -6,6 +6,32 @@ jQuery(document).ready(function($) {
 		var themeManager = null;
 		var navigationManager = null;
 		var propertyBrowser = null;
+		var sessionManager = null;
+		var priceService = null;
+		
+		function loadPrice(onLoad) {
+			console.info('pd.app: Loading price...');
+			dpd.pricetree.get({
+				'cafe' : wsModel.get().cafe,
+				'object' : '1'
+			},
+			function(pricetree, error) {
+				if (error) {
+					throwException('pd.app: Failed to load price. '
+						+ 'Cause:\n' + error.message);
+				}
+				if (!pricetree[0].object) {
+					throwException('pd.app: Failed to load price. Cause:\n'
+						+ 'Price is empty');
+				}
+				console.log(pricetree[0].object);
+
+				priceService = new PriceService($('#price'),
+					pricetree[0].object);
+				console.info('pd.app: Price loaded.');
+				onLoad();
+			});
+		}
 		
 		function loadThemes(onLoad) {
 			console.info('pd.app: Loading themes...');
@@ -16,7 +42,7 @@ jQuery(document).ready(function($) {
 				}
 				themeManager = new ThemeManager($('#theme'), themes);
 				console.info('pd.app: Themes loaded.');
-				onLoad();
+				loadPrice(onLoad);
 			});
 		}
 		
@@ -28,9 +54,9 @@ jQuery(document).ready(function($) {
 					+ 'The id of menu must be provided as a hash part of URL');
 			}
 			console.info('pd.app: Trying to restore previous session...');
-			wsModel.restore(0);
-			var menu = wsModel.get();
-			if (menu && menu.id == menuId) {
+			var menu = sessionManager.restore(0);
+			if (menu && menu.id === menuId) {
+				wsModel = new WsModel(menu);
 				console.info('pd.app: Previous session restored.');
 				loadThemes(onLoad);
 			} else {
@@ -41,7 +67,7 @@ jQuery(document).ready(function($) {
 						throwException('pd.app: Failed to load menu. '
 							+ 'Cause:\n' + error.message);
 					}
-					wsModel.store(menu);
+					wsModel = new WsModel(menu);
 					console.info('pd.app: Menu loaded.');
 					loadThemes(onLoad);
 				});
@@ -49,33 +75,24 @@ jQuery(document).ready(function($) {
 		}
 		
 		(function load() {
-			wsModel = new WsModel();
+			sessionManager = new SessionManager();
 			loadMenu(function() {
 				navigationManager = new NavigationManager($('#navigation'));
 				propertyBrowser = new PropertyBrowser($('#properties'));
 				
-				// Init WsModel.
-				var menuStoreEventTimerId = 0;
-				var wsModelEventListener = {
-					onStore : function(menu) {
-						clearTimeout(menuStoreEventTimerId);
-						menuStoreEventTimerId = setTimeout(function() {
-							console.info('pd.app: Save menu...');
-							dpd.menu.put(menu, function(menu, error) {
-								if (error) {
-									console.error('pd.app: Failed to '
-										+ 'save menu. Cause:\n'
-										+ error.message);
-								} else {
-									console.info('pd.app: Model saved.');
-								}
-							});
-						}, 3000);
-					}
-				};
-				wsModel.addStoreEventListener(wsModelEventListener);
-				
-				// Init WsTemplateController.
+				// Init ThemeManagerEventListener.
+				function saveTheme() {
+					console.info('pd.app: Save theme...');
+					dpd.theme.put(themeManager.getTheme(), function(theme, error) {
+						if (error) {
+							console.error('pd.app: Failed to '
+								+ 'save theme. Cause:\n'
+								+ error.message);
+						} else {
+							console.info('pd.app: Theme saved.');
+						}
+					});
+				}
 				var wsTemplateControllerProperties = {};
 				function setWsTemplateControllerPropertyValues(template) {
 					PropertiesBuilder(wsTemplateControllerProperties)
@@ -127,7 +144,7 @@ jQuery(document).ready(function($) {
 							setWsTemplateControllerPropertyValues(template);
 						}
 					},
-					onThemeChange : function(theme) {
+					onThemeChange : function(theme, onLoad) {
 						console.info('pd.app: Loading theme templates...');
 						dpd.template.get({
 							'owner' : theme.id
@@ -137,6 +154,7 @@ jQuery(document).ready(function($) {
 									+ 'templates. Cause:\n' + error.message);
 							}		
 							themeManager.setTemplates(templates);
+							onLoad();
 							console.info('pd.app: Theme templates loaded.');
 						});
 					}
@@ -151,76 +169,72 @@ jQuery(document).ready(function($) {
 					themeManagerEventListener);
 				themeManager.addThemeChangeEventListener(
 					themeManagerEventListener);
-				themeManager.setTheme(wsModel.get().theme);
-				
-				function saveTheme() {
-					console.info('pd.app: Save theme...');
-					dpd.theme.put(themeManager.getTheme(), function(theme, error) {
-						if (error) {
-							console.error('pd.app: Failed to '
-								+ 'save theme. Cause:\n'
-								+ error.message);
-						} else {
-							console.info('pd.app: Theme saved.');
+				themeManager.setTheme(wsModel.get().theme, function() {
+					// Init WsController.
+					wsController = new WsController($('#ws'), wsModel,
+						themeManager.getTheme());
+					wsController.addPagesChangeEventListener(navigationManager);
+					
+					var currentPropertyBrowserItem = null;
+					
+					function onWsControllerPropertyChange(update) {
+						if (update.bgColor) {
+							themeManager.getTheme().bgColor = update.bgColor;
+							wsController.setBgColor(update.bgColor);
+							saveTheme();
 						}
-					});
-				}
-				
-				// Init WsController.
-				wsController = new WsController($('#ws'), wsModel,
-					themeManager.getTheme());
-				wsController.addPagesChangeEventListener(navigationManager);
-				
-				var currentPropertyBrowserItem = null;
-				
-				function onWsControllerPropertyChange(update) {
-					if (update.bgColor) {
-						themeManager.getTheme().bgColor = update.bgColor;
-						wsController.setBgColor(update.bgColor);
-						saveTheme();
 					}
-				}
-				var wsControllerProperties = {};
-				PropertiesBuilder(wsControllerProperties)
-					.addStringProperty('themeName', 'Theme')
-					.addStringProperty('themeDescription', 'Description')
-					.addNumberProperty('width', 'Width')
-					.addNumberProperty('height', 'Height')
-					.addColorProperty('bgColor', 'Bg Color',
-						onWsControllerPropertyChange)
-					.setPropertyValues({
-						themeName : themeManager.getTheme().name,
-						themeDescription : themeManager.getTheme().description,
-						width : themeManager.getTheme().width,
-						height : themeManager.getTheme().height,
-						bgColor : themeManager.getTheme().bgColor,
-					});
-				
-				var wsControllerEventListener = {
-					onSelect : function(selectedItem) {
-						var properties = null;
-						if (selectedItem) {
-							var wsItemFactory = WsItemFactory
-								.forType(selectedItem.type);
-							if (currentPropertyBrowserItem === selectedItem) {
-								properties = propertyBrowser.get();
+					var wsControllerProperties = {};
+					PropertiesBuilder(wsControllerProperties)
+						.addStringProperty('themeName', 'Theme')
+						.addStringProperty('themeDescription', 'Description')
+						.addNumberProperty('width', 'Width')
+						.addNumberProperty('height', 'Height')
+						.addColorProperty('bgColor', 'Bg Color',
+							onWsControllerPropertyChange)
+						.setPropertyValues({
+							themeName : themeManager.getTheme().name,
+							themeDescription : themeManager.getTheme().description,
+							width : themeManager.getTheme().width,
+							height : themeManager.getTheme().height,
+							bgColor : themeManager.getTheme().bgColor,
+						});
+					
+					var wsControllerEventListener = {
+						onSelect : function(selectedItem) {
+							var properties = null;
+							if (selectedItem) {
+								var wsItemFactory = WsItemFactory
+									.forType(selectedItem.type);
+								if (currentPropertyBrowserItem === selectedItem) {
+									properties = propertyBrowser.get();
+								} else {
+									properties = wsItemFactory.createProperties(
+										wsController.updateSelectedItem);
+									delete properties.x;
+									delete properties.y;
+									delete properties.zIndex;
+								}
+								PropertiesBuilder(properties)
+									.setPropertyValues(selectedItem);
 							} else {
-								properties = wsItemFactory.createProperties(
-									wsController.updateSelectedItem);
-								delete properties.x;
-								delete properties.y;
-								delete properties.zIndex;
+								properties = wsControllerProperties;
 							}
-							PropertiesBuilder(properties)
-								.setPropertyValues(selectedItem);
-						} else {
-							properties = wsControllerProperties;
+							propertyBrowser.set(properties);
+							currentPropertyBrowserItem = selectedItem;
 						}
-						propertyBrowser.set(properties);
-						currentPropertyBrowserItem = selectedItem;
-					}
-				};
-				wsController.addSelectEventListener(wsControllerEventListener);
+					};
+					wsController.addSelectEventListener(
+						wsControllerEventListener);
+					
+					// Init NavigationManager.
+					navigationManager.addPageSelectEventListener(wsController);
+					navigationManager.setPage(0);
+					
+					wsController.focus();
+					wsController.setScale(0.8)
+					propertyBrowser.set(wsControllerProperties);
+				});
 				
 				// Init WsTemplateController.
 				wsTemplateController = new WsTemplateController(
@@ -319,19 +333,47 @@ jQuery(document).ready(function($) {
 					wsTemplateControllerEventListener);
 				wsTemplateController.addSelectEventListener(
 					wsTemplateControllerEventListener);
-					
-				// Init NavigationManager.
-				navigationManager.addPageSelectEventListener(wsController);
-				navigationManager.setPage(0);
 				
+				var menuStoreEventTimerId = 0;
 				var $window = $(window);
-				$window.on('message-opentemplate', function(e) {
-					var template = themeManager.getTemplate(e.template);
-					wsTemplateController.open(template);
-					setWsTemplateControllerPropertyValues(template);
-				});
-				$window.on('message-gettemplate', function(e) {
-					e.template = themeManager.getTemplate(e.template);
+				$window.on('message', function(e) {
+					//console.log('message', e);
+					if (e.id === 'store') {
+						sessionManager.store(e.ns, e.state);
+						// Init WsModel.
+						clearTimeout(menuStoreEventTimerId);
+						menuStoreEventTimerId = setTimeout(function() {
+							console.info('pd.app: Save menu...');
+							dpd.menu.put(e.state, function(menu, error) {
+								if (error) {
+									console.error('pd.app: Failed to '
+										+ 'save menu. Cause:\n'
+										+ error.message);
+								} else {
+									console.info('pd.app: Menu saved.');
+								}
+							});
+						}, 3000);
+						return;
+					}
+					if (e.id === 'restore') {
+						e.state = sessionManager.restore(e.ns, e.index);
+						return;
+					}
+					if (e.id === 'opentemplate') {
+						var template = themeManager.getTemplate(e.template);
+						wsTemplateController.open(template);
+						setWsTemplateControllerPropertyValues(template);
+						return;
+					}
+					if (e.id === 'gettemplate') {
+						e.template = themeManager.getTemplate(e.template);
+						return;
+					}
+					if (e.id === 'getprice') {
+						e.price = priceService.get(e.price);
+						return;
+					}
 				});
 				
 				$('#panel-west').pdAccordion();
@@ -398,10 +440,6 @@ jQuery(document).ready(function($) {
 					}]
 				});
 				
-				wsController.focus();
-				wsController.setScale(0.8)
-				propertyBrowser.set(wsControllerProperties);
-				
 				$(document.body).css({
 					'visibility' : 'visible'
 				});
@@ -420,6 +458,9 @@ jQuery(document).ready(function($) {
 			},
 			getNavigationManager : function() {
 				return navigationManager;
+			},
+			getPriceService : function() {
+				return priceService;
 			},
 		};
 	})();
