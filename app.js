@@ -207,9 +207,9 @@ jQuery(document).ready(function($) {
 							} else {
 								properties = wsItemFactory.createProperties(
 									wsController.updateSelectedItem);
-								properties = Object.extend({}, properties);
 								delete properties.x;
 								delete properties.y;
+								delete properties.zIndex;
 							}
 							PropertiesBuilder(properties)
 								.setPropertyValues(selectedItem);
@@ -246,7 +246,8 @@ jQuery(document).ready(function($) {
 						});
 						wsTemplateController.updateViewGeometry();
 					} else if (update.bgColor) {
-						wsTemplateController.bgColor = update.bgColor;
+						wsTemplateController.getModel().bgColor =
+							update.bgColor;
 						wsTemplateController.setBgColor(update.bgColor);
 					}
 				}
@@ -285,6 +286,12 @@ jQuery(document).ready(function($) {
 								}
 							});
 						}
+						wsController.updateItems(wsModel.find({
+							type : 'template',
+							config : {
+								template : template.name
+							}
+						}), {});
 					},
 					onSelect : function(selectedItem) {
 						var properties = null;
@@ -296,7 +303,6 @@ jQuery(document).ready(function($) {
 							} else {
 								properties = wsItemFactory.createProperties(
 									wsTemplateController.updateSelectedItem);
-								properties = Object.extend({}, properties);
 								delete properties.p;
 								delete properties.i;
 							}
@@ -317,6 +323,16 @@ jQuery(document).ready(function($) {
 				// Init NavigationManager.
 				navigationManager.addPageSelectEventListener(wsController);
 				navigationManager.setPage(0);
+				
+				var $window = $(window);
+				$window.on('message-opentemplate', function(e) {
+					var template = themeManager.getTemplate(e.template);
+					wsTemplateController.open(template);
+					setWsTemplateControllerPropertyValues(template);
+				});
+				$window.on('message-gettemplate', function(e) {
+					e.template = themeManager.getTemplate(e.template);
+				});
 				
 				$('#panel-west').pdAccordion();
 				var $toolbar = $('#panel-east').pdAccordion({
@@ -383,6 +399,7 @@ jQuery(document).ready(function($) {
 				});
 				
 				wsController.focus();
+				wsController.setScale(0.8)
 				propertyBrowser.set(wsControllerProperties);
 				
 				$(document.body).css({

@@ -237,11 +237,17 @@ var WsControllerSupport = function() {
 		}
 		switch (e.which) {
 		case 13:
+			if (self.getEditor()) {
+				return true;
+			}
 			if (selectedItem && self.createEditor(this.updateSelectedItem)) {
 				return stopEventPropagation(e);
 			}
 			break;
 		case 27:
+			if (!self.getEditor()) {
+				return true;
+			}
 			if (selectedItem && self.destroyEditor()) {
 				return stopEventPropagation(e);
 			}
@@ -276,9 +282,8 @@ var WsControllerSupport = function() {
 		if (data.evt.which !== 1) {
 			return;
 		}
-		if (self.createEditor(this.updateSelectedItem)) {
-			self.stopDblClickEventPropagation();
-		}
+		self.createEditor(this.updateSelectedItem);
+		self.stopDblClickEventPropagation();
 	};
 	
 	var pageMargin = 20;

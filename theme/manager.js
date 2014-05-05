@@ -114,7 +114,7 @@ var ThemeManager = function($container, themes) {
 						model : {
 							type : 'template',
 							config : {
-								template : template
+								template : template.name
 							}
 						}
 					});

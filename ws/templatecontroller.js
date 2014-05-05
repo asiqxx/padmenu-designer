@@ -45,14 +45,14 @@ var WsTemplateController = function($viewContainer) {
 	var draggingItemView = null;
 	var eventListener = {
 		onKeydown : function(e) {
-			if (!self.isFocused()) {
-				return true;
-			}
 			if (!self.onKeydown(e)) {
 				return false;
 			}
+			if (!self.isFocused()) {
+				return true;
+			}
 			if (self.getEditor()) {
-				return false;
+				return true;
 			}
 			
 			switch (e.which) {

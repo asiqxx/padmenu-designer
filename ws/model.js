@@ -305,6 +305,19 @@ var WsModel = function() {
 
 		return range;
 	};
+	
+	this.find = function(query) {
+		var items = [];
+		for (var page = 0; page < data.pages.length; page++) {
+			for (var index = 0; index < data.pages[page].length; index++) {
+				var item = data.pages[page][index];
+				if (Object.matches(data.pages[page][index], query)) {
+					items.push(item);
+				}
+			}
+		}
+		return items;
+	};
 
 	this.store = function(state) {
 		clearTimeout(storeTimerId);
@@ -323,18 +336,19 @@ var WsModel = function() {
 
 			fireStoreEvent();
 			
-			sessionStorage.setItem('wsmodel.states', JSON.stringify(states));
-			sessionStorage.setItem('wsmodel.state.index', stateIndex);
+			//sessionStorage.setItem('wsmodel.states', JSON.stringify(states));
+			//sessionStorage.setItem('wsmodel.state.index', stateIndex);
 		}, 250);
 	};
 	this.restore = function(offset) {
 		if (stateIndex < 0) {			
+			return;
 			var i = sessionStorage.getItem('wsmodel.state.index');
-			if (i == null) {
+			if (i === null) {
 				return;
 			}
 			var s = sessionStorage.getItem('wsmodel.states');
-			if (s == null) {
+			if (s === null) {
 				return;
 			}
 			stateIndex = parseInt(i);
@@ -357,7 +371,7 @@ var WsModel = function() {
 
 		fireStoreEvent();
 		
-		sessionStorage.setItem('wsmodel.state.index', stateIndex);
+		//sessionStorage.setItem('wsmodel.state.index', stateIndex);
 	};
 
 	this.addPagesChangeEventListener = function(listener) {

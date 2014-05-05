@@ -9,11 +9,14 @@ var WsController = function($viewContainer, model, theme) {
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
 		onKeydown : function(e) {
+			if (!self.onKeydown(e)) {
+				return false;
+			}
 			if (!self.isFocused()) {
 				return true;
 			}
-			if (!self.onKeydown(e)) {
-				return false;
+			if (self.getEditor()) {
+				return true;
 			}
 			if (self.getSelectedItem()) {
 				switch (e.which) {
@@ -70,10 +73,15 @@ var WsController = function($viewContainer, model, theme) {
 			var placeholderItem = self.getPlaceholderItem();
 			placeholderItem.x = position.x;
 			placeholderItem.y = position.y;
-			if (placeholderItem.p != page || placeholderItem.i == -1) {
+			if (placeholderItem.p !== page || placeholderItem.i === -1) {
 				model.add(page, placeholderItem);
 			} else {
 				model.realign(page, placeholderItem.i);
+				if (placeholderItem.p !== page) {
+					page = placeholderItem.p;
+					self.render(0);
+					self.firePagesChangeEvent();
+				}
 			}
 		},
 		onDrop : function(e) {
@@ -197,7 +205,69 @@ var WsController = function($viewContainer, model, theme) {
 			self.selectItem(self.getSelectedItem());
 		}
 	};
-		
+	
+	self.updateItems = function(items, update) {
+		if (items.length === 0) {
+			return;
+		}
+		reneredItems = [];
+		if (!update) {
+			for (var i = 0; i < items.length; i++) {
+				var item = items[i];
+				// TODO too many draw operations
+				model.remove(item.p, item.i);
+				WsController.cache.remove(item);
+			}
+			model.store();
+			return;
+		}
+		for (var i = 0; i < items.length; i++) {
+			var item = items[i];
+			Object.extend(item, update, true);
+			if (item.w < 0) {
+				item.w = 0;
+			}
+			if (item.h < 0) {
+				item.h = 0;
+			}
+			function onRender(itemView) {
+				WsController.cache.remove(item);
+				WsController.cache.add(itemView);
+				// TODO too many draw operations
+				model.update(item.p, item.i);
+			}
+			var wsItemFactory = WsItemFactory.forType(item.type);
+			var itemView = wsItemFactory.createView(item);
+			itemView.on('render', function() {
+				if (item.w < 1 || item.w > model.getWidth()) {
+					item.w = model.getWidth();
+					var itemView = wsItemFactory.createView(item);
+					itemView.on('render', function() {
+						onRender(this);
+					});
+					wsItemFactory.render(itemView);
+				} else if (item.h < 1 || item.h > model.getHeight()) {
+					item.h = model.getHeight();
+					var itemView = wsItemFactory.createView(item);
+					itemView.on('render', function() {
+						onRender(this);
+					});
+					wsItemFactory.render(itemView);
+				} else {
+					onRender(this);
+				}
+			});
+			wsItemFactory.render(itemView);
+		}
+		if (page >= model.get().pages.length) {
+			page--;
+			self.render(0);
+			self.firePagesChangeEvent();
+		}
+		self.selectItem(self.getSelectedItem());
+		model.store();
+	};
+	
 	self.updateSelectedItem = function(update) {
 		var selectedItem = self.getSelectedItem();
 		reneredItems = [];
@@ -337,6 +407,7 @@ var WsController = function($viewContainer, model, theme) {
 
 WsController.inherits(WsControllerSupport);
 
+// TODO add special kind of cache for templates
 WsController.cache = (function(){
 	var items = [];
 	var itemViews = [];
