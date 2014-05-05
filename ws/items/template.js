@@ -84,9 +84,6 @@ var TemplateWsItemFactory = function() {
 						}
 					}
 				}
-				if (itemModel.type === 'text') {
-					itemModel.config.text = 'asdasdas/nasdasdsada/nasdasdas/nd';
-				}
 				var offsetItemIndex = -1;
 				for (var k = 0; k < offsets.length; k++) {
 					if (itemModel.y > offsets[k][0]) {
