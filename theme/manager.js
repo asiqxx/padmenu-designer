@@ -26,6 +26,7 @@ var ThemeManager = function($container, themes) {
 					width : theme.width,
 					height : theme.height,
 					bgColor : 'transparent',
+					items : []
 				};
 				self.addTemplate(template);
 				self.selectTemplate(template);
@@ -138,6 +139,7 @@ var ThemeManager = function($container, themes) {
 	this.selectTemplate = function(template) {
 		if ($selectedTemplate) {
 			$selectedTemplate.removeClass('pd-template-selected');
+			$selectedTemplate = null;
 		}
 		if (template) {
 			var $template = $templateContainer.children().filter(

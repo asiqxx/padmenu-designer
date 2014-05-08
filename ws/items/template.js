@@ -24,7 +24,7 @@ var TemplateWsItemFactory = function() {
 				model.w = model.meta.template.width;
 				model.h = model.meta.template.height;
 				model.bg = model.meta.template.bgColor;
-			}			
+			}
 		}
 		var event = $.Event('message', {
 			id : 'getprice',
@@ -37,10 +37,8 @@ var TemplateWsItemFactory = function() {
 	this.render = function(view) {
 		var self = this;
 		var model = view.getAttr('model');
-		if (model.meta.template) {
-			// TODO if (!template) {}
-			// TODO if (!price) {}
-			
+		model.config.items = [];
+		if (model.meta.template) {			
 			var renderedItemCount = 0;
 			var offsets = [];
 			for (var i = 0; i < model.meta.template.items.length; i++) {
@@ -67,7 +65,7 @@ var TemplateWsItemFactory = function() {
 					if (typeof itemModel.config === 'object') {
 						for (var key in itemModel.config) {
 							if (typeof itemModel.config[key] === 'string'
-								&& !itemModel[key].match(/[#][0-9a-fA-F]{6}/)) {
+								&& !itemModel.config[key].match(/[#][0-9a-fA-F]{6}/)) {
 								var hashes = null;
 								var regexp = /[#][\w\[\].]+/;
 								while (hashes = itemModel.config[key].match(regexp)) {
@@ -121,8 +119,10 @@ var TemplateWsItemFactory = function() {
 				if (model.h < bottom) {
 					model.h = bottom;
 				}
+				model.config.items.push(itemModel);
 			}
 		}
+		delete model.meta;
 		self.uber('render', view);
 		view.fire('render');
 	};
@@ -132,6 +132,9 @@ var TemplateWsItemFactory = function() {
 			properties[key].control.attr('type', 'text');
 			properties[key].control.attr('readonly', 'readonly');
 		}
+		PropertiesBuilder(properties)
+			.addStringProperty('config.template', 'Template')
+			.addStringProperty('config.price', 'Price');
 		return properties;
 	};
 	this.createEditor = function(model, onChange) {

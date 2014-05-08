@@ -24,7 +24,6 @@ jQuery(document).ready(function($) {
 					throwException('pd.app: Failed to load price. Cause:\n'
 						+ 'Price is empty');
 				}
-				console.log(pricetree[0].object);
 
 				priceService = new PriceService($('#price'),
 					pricetree[0].object);
@@ -81,6 +80,7 @@ jQuery(document).ready(function($) {
 				propertyBrowser = new PropertyBrowser($('#properties'));
 				
 				// Init ThemeManagerEventListener.
+				// TODO add timeout
 				function saveTheme() {
 					console.info('pd.app: Save theme...');
 					dpd.theme.put(themeManager.getTheme(), function(theme, error) {
@@ -106,10 +106,13 @@ jQuery(document).ready(function($) {
 				var themeManagerEventListener = {
 					onTemplateCreate : function(template) {
 						wsTemplateController.open(template);
+						wsTemplateController.focus();
+						setWsTemplateControllerPropertyValues(template);
 					},
 					onTemplateRemove : function(template) {
 						console.info('pd.app: Remove template...');
 						wsTemplateController.close(withoutSave = true);
+						wsTemplateController.blur(true);
 						if (template.id) {
 							dpd.template.del(template.id, function(tpl, error) {
 								if (error) {
@@ -130,17 +133,29 @@ jQuery(document).ready(function($) {
 								if (template
 									!== wsTemplateController.getModel()) {
 									wsTemplateController.open(template);
+									wsTemplateController.focus();
 									setWsTemplateControllerPropertyValues(template);
 								}
 							} else {
 								wsTemplateController.close();
+								wsTemplateController.blur(true);
+							}
+						} else {
+							var selectedItem = wsController.getSelectedItem();
+							if (template && selectedItem && selectedItem.type === 'template'
+								&& selectedItem.config.template !== template.name) {
+								wsController.updateSelectedItem({
+									config : {
+										template : template.name
+									}
+								});
 							}
 						}
 					},
 					onTemplateDblClick : function(template) {
-						if (template
-							&& template !== wsTemplateController.getModel()) {
+						if (!wsTemplateController.isFocused() && template) {
 							wsTemplateController.open(template);
+							wsTemplateController.focus();
 							setWsTemplateControllerPropertyValues(template);
 						}
 					},
@@ -182,6 +197,14 @@ jQuery(document).ready(function($) {
 							themeManager.getTheme().bgColor = update.bgColor;
 							wsController.setBgColor(update.bgColor);
 							saveTheme();
+						} else if (update.bgImage) {
+							themeManager.getTheme().bgImage = update.bgImage;
+							wsController.setBgImage(update.bgImage);
+							saveTheme();
+						} else if (update.opacity) {
+							themeManager.getTheme().opacity = update.opacity;
+							wsController.setOpacity(update.opacity);
+							saveTheme();
 						}
 					}
 					var wsControllerProperties = {};
@@ -192,12 +215,18 @@ jQuery(document).ready(function($) {
 						.addNumberProperty('height', 'Height')
 						.addColorProperty('bgColor', 'Bg Color',
 							onWsControllerPropertyChange)
+						.addStringProperty('bgImage', 'Bg Image',
+							onWsControllerPropertyChange)
+						.addStringProperty('opacity', 'Opacity',
+							onWsControllerPropertyChange)
 						.setPropertyValues({
 							themeName : themeManager.getTheme().name,
 							themeDescription : themeManager.getTheme().description,
 							width : themeManager.getTheme().width,
 							height : themeManager.getTheme().height,
 							bgColor : themeManager.getTheme().bgColor,
+							bgImage : themeManager.getTheme().bgImage,
+							opacity : themeManager.getTheme().opacity,
 						});
 					
 					var wsControllerEventListener = {
@@ -222,6 +251,15 @@ jQuery(document).ready(function($) {
 							}
 							propertyBrowser.set(properties);
 							currentPropertyBrowserItem = selectedItem;
+							if (selectedItem && selectedItem.type === 'template') {
+								var template = themeManager.getTemplate(
+									selectedItem.config.template);
+								if (template) {
+									themeManager.selectTemplate(template);
+								}
+							} else {
+								themeManager.selectTemplate();
+							}
 						}
 					};
 					wsController.addSelectEventListener(
@@ -232,8 +270,11 @@ jQuery(document).ready(function($) {
 					navigationManager.setPage(0);
 					
 					wsController.focus();
-					wsController.setScale(0.8)
 					propertyBrowser.set(wsControllerProperties);
+					wsController.setScale(
+						wsModel.getWidth() > wsModel.getHeight()
+							? wsController.getView().getWidth() / (wsModel.getWidth() + 20)
+							: wsController.getView().getHeight() / (wsModel.getHeight() + 20));
 				});
 				
 				// Init WsTemplateController.
@@ -340,20 +381,22 @@ jQuery(document).ready(function($) {
 					//console.log('message', e);
 					if (e.id === 'store') {
 						sessionManager.store(e.ns, e.state);
-						// Init WsModel.
-						clearTimeout(menuStoreEventTimerId);
-						menuStoreEventTimerId = setTimeout(function() {
-							console.info('pd.app: Save menu...');
-							dpd.menu.put(e.state, function(menu, error) {
-								if (error) {
-									console.error('pd.app: Failed to '
-										+ 'save menu. Cause:\n'
-										+ error.message);
-								} else {
-									console.info('pd.app: Menu saved.');
-								}
-							});
-						}, 3000);
+						if (e.ns === 'wscontroller') {
+							// Init WsModel.
+							clearTimeout(menuStoreEventTimerId);
+							menuStoreEventTimerId = setTimeout(function() {
+								console.info('pd.app: Save menu...');
+								dpd.menu.put(e.state, function(menu, error) {
+									if (error) {
+										console.error('pd.app: Failed to '
+											+ 'save menu. Cause:\n'
+											+ error.message);
+									} else {
+										console.info('pd.app: Menu saved.');
+									}
+								});
+							}, 3000);
+						}
 						return;
 					}
 					if (e.id === 'restore') {
@@ -363,6 +406,7 @@ jQuery(document).ready(function($) {
 					if (e.id === 'opentemplate') {
 						var template = themeManager.getTemplate(e.template);
 						wsTemplateController.open(template);
+						wsTemplateController.focus();
 						setWsTemplateControllerPropertyValues(template);
 						return;
 					}
@@ -376,7 +420,67 @@ jQuery(document).ready(function($) {
 					}
 				});
 				
-				$('#panel-west').pdAccordion();
+				$('#panel-west').pdAccordion({
+					mode : 'multi'
+				});
+				$('#ws-toolbar').pdToolbar({
+					source : [{
+						'name' : 'zoomin',
+						'type' : 'text',
+						'value' : '+',
+						'click' : function() {
+							if (wsController.isFocused()) {
+								wsController.setScale(wsController.getScale() + 0.1);
+							} else if (wsTemplateController.isFocused()) {
+								wsTemplateController.setScale(wsTemplateController.getScale() + 0.1);
+							}
+						}
+					}, {
+						'name' : 'zoomout',
+						'type' : 'text',
+						'value' : '-',
+						'click' : function() {
+							if (wsController.isFocused()) {
+								if (wsController.getScale() > 0.2) {
+									wsController.setScale(wsController.getScale() - 0.1);
+								}
+							} else if (wsTemplateController.isFocused()) {
+								if (wsTemplateController.getScale() > 0.2) {
+									wsTemplateController.setScale(wsTemplateController.getScale() - 0.1);
+								}
+							}
+						}
+					}, {
+						'name' : 'zoom1',
+						'type' : 'text',
+						'value' : '1',
+						'click' : function() {
+							if (wsController.isFocused()) {
+								wsController.setScale(1);
+							} else if (wsTemplateController.isFocused()) {
+								wsTemplateController.setScale(1);
+							}
+						}
+					}, {
+						'name' : 'zoomauto',
+						'type' : 'text',
+						'value' : '| - |',
+						'click' : function() {
+							if (wsController.isFocused()) {
+								wsController.setScale(
+									wsModel.getWidth() > wsModel.getHeight()
+										? wsController.getView().getWidth() / (wsModel.getWidth() + 20)
+										: wsController.getView().getHeight() / (wsModel.getHeight() + 20));
+							} else if (wsTemplateController.isFocused()) {
+								wsTemplateController.setScale(
+									wsTemplateController.getModel().width > wsTemplateController.getModel().height
+										? wsTemplateController.getView().getWidth() / (wsTemplateController.getModel().width + 20)
+										: wsTemplateController.getView().getHeight() / (wsTemplateController.getModel().height + 20));
+							}
+						}
+					}]
+				});
+				
 				var $toolbar = $('#panel-east').pdAccordion({
 					mode : 'multi',
 					collapsible : true
@@ -405,6 +509,19 @@ jQuery(document).ready(function($) {
 								return $('<div/>').pdWsItem({
 									model : {
 										type : 'image'
+									}
+								});
+							}
+						}
+					}, {
+						'name' : 'video',
+						'type' : 'class',
+						'value' : 'icon-icomoon-video',
+						'draggable' : {
+							dragObject : function() {
+								return $('<div/>').pdWsItem({
+									model : {
+										type : 'video'
 									}
 								});
 							}

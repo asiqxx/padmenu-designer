@@ -35,6 +35,7 @@
 	line-height: 2em;
 	padding-left: 1em;
 	font-weight: bold;
+	font-variant: small-caps;
 }
 .pd-content {
 	background: #333;
@@ -48,7 +49,6 @@
 }
 
 .pd-toolbar {
-	background-color: #333;
 }
 .pd-toolbar-item {
 	color: #F5F5DC;
@@ -69,6 +69,7 @@
 
 .pd-theme-manager {
 	padding: 0.75em 1em;
+	font-variant: small-caps;
 }
 .pd-template-container {
 	background-color: #282828;
@@ -86,6 +87,7 @@
 	padding: 0.5em;
 	font-family: monospace;
 	font-size: 1em;
+	font-variant: normal;
 	text-align: center;
 	position: relative;
 }
@@ -224,33 +226,49 @@
 }
 
 .pd-price-service {
+	background-color: #222;
 	padding: 0.5em 1em;
+	height: 96%;
+	overflow: auto;
 }
 
 .pd-price-service-item {
-	background-color: #696;
-	color: #222;
-	box-shadow: 0px 0px 4px 2px rgba(0, 0, 0, 0.5);
-	border: 1px solid #444;
+	color: #9C9;
 	width: 100%;
 	line-height: 1.5em;
 	font-size: 1em;
 	padding: 0 0.5em;
-	margin: 0.5em 0;
 	cursor: pointer;
 }
 .pd-price-service-category {
-	background-color: #DD4444;
-	font-size: 1.2em;
+	color: #D44;
+}
+.pd-price-service-level {
+	margin: 0.25em 0;
 }
 .pd-price-service-level-1 {
 	padding-left: 1em;
 }
 .pd-price-service-level-2 {
-	padding-left: 2em;
+	padding-left: 1em;
 }
 .pd-price-service-level-3 {
-	padding-left: 3em;
+	padding-left: 1em;
+}
+.pd-price-service-level-icon {
+	float: left;
+	font-size: 1em;
+	line-height: 1.5em;
+	padding-right: 0.5em;
+}
+.pd-price-service-level-icon:before {
+	content: "-";
+	color: #FD8;
+	font-family: monospace;
+	font-weight: bold;
+}
+.pd-price-service-level-collapsed .pd-price-service-level-icon:before {
+	content: "+";
 }
 
 .rasta .rasta-color-green {
@@ -285,6 +303,34 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
+	overflow: hidden;
+}
+#ws-toolbar {
+	background: #333;
+	color: #F5F5DC;
+	padding: 0 0.4em;
+	border-bottom: 2px solid #222;
+	font-style: monospace;
+}
+#ws-toolbar>.pd-toolbar-item {
+	margin: 4px;
+	padding: 4px;
+	font-size: 16px;
+	border: 1px solid #333;
+}
+#ws-toolbar>.pd-toolbar-item:hover {
+	color: #D44;
+}
+
+#ws-toolbar>.pd-toolbar-item-active {
+	background-color: #222;
+	border-color: #000;
+}
+
+#ws-toolbar>.pd-toolbar-item-separator {
+	background-color: #202020;
+	width: 2px;
+	border-right: 1px solid #404040;
 }
 
 #panel-east {

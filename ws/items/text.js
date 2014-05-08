@@ -5,8 +5,11 @@ var TextWsItemFactory = function() {
 			w : 0,
 			h : 0,
 			config : {
-				fontFamily : 'Arial, Helvetica',
+				fontFamily : 'Arial',
 				fontSize : 13,
+				fontStyle : 'normal',
+				fontVariant : 'normal',
+				align : 'left',
 				text : ''
 			}
 		});
@@ -19,8 +22,11 @@ var TextWsItemFactory = function() {
 			height : 'auto',
 			fill : model.color,
 			text : model.config.text,
-			fontSize : model.config.fontSize,
 			fontFamily : model.config.fontFamily,
+			fontSize : model.config.fontSize,
+			fontStyle : model.config.fontStyle,
+			fontVariant : model.config.fontVariant,
+			align : model.config.align,
 		});
 		if (model.config.text.length === 0) {
 			text.setText('Type here...');
@@ -37,9 +43,37 @@ var TextWsItemFactory = function() {
 		properties.h.control.attr('type', 'text');
 		properties.h.control.attr('readonly', 'readonly');
 		PropertiesBuilder(properties)
-			.addStringProperty('config.fontFamily', 'Font', onChange)
+			.addStringsProperty('config.fontFamily', 'Font', onChange, {
+				'Georgia' : 'Georgia, serif',
+				'Palatino Linotype' : '"Palatino Linotype", "Book Antiqua", Palatino, serif',
+				'Times New Roman' : '"Times New Roman", Times, serif',
+				'Arial' : 'Arial, Helvetica, sans-serif',
+				'Arial Black' : '"Arial Black", Gadget, sans-serif',
+				'Comic Sans MS' : '"Comic Sans MS", cursive, sans-serif',
+				'Impact' : 'Impact, Charcoal, sans-serif',
+				'Lucida Sans Unicode' : '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
+				'Tahoma' : 'Tahoma, Geneva, sans-serif',
+				'Trebuchet MS' : '"Trebuchet MS", Helvetica, sans-serif',
+				'Verdana' : 'Verdana, Geneva, sans-serif',
+				'Courier New' : '"Courier New", Courier, monospace',
+				'Lucida Console' : '"Lucida Console", Monaco, monospace',
+			})
 			.addNumberProperty('config.fontSize', 'Font Size', onChange,
-				1, 100000, 1)
+				1, 96, 1)
+			.addStringsProperty('config.fontStyle', 'Font Style', onChange, {
+				'normal' : 'normal',
+				'bold' : 'bold',
+				'italic' : 'italic'
+			})
+			.addStringsProperty('config.fontVariant', 'Font Variant', onChange, {
+				'normal' : 'normal',
+				'small-caps' : 'small-caps'
+			})
+			.addStringsProperty('config.align', 'Align', onChange, {
+				'left' : 'normal',
+				'center' : 'center',
+				'right' : 'right'
+			})
 			.addTextProperty('config.text', 'Text', onChange);
 		return properties;
 	};

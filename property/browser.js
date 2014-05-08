@@ -80,6 +80,26 @@ var PropertiesBuilder = function(properties) {
 			};
 			return this;
 		},
+		addStringsProperty : function(name, label, onChange, strings) {
+			var $control = $('<select type="color">');
+			for (var key in strings) {
+				var option = new Option(key, strings[key]);
+				$control.append(option);
+			}
+			if (onChange) {
+				$control.on('change', function() {
+					onChange(createUpdateObject(name, $(this).val()));
+				});
+			} else {
+				$control.attr('readonly', 'readonly');
+			}
+			properties[name] = {
+				name : name,
+				label : label,
+				control : $control
+			};
+			return this;
+		},
 		addTextProperty : function(name, label, onChange) {
 			var $control = $('<textarea rows="5"></textarea>');
 			$control.css({
@@ -140,7 +160,12 @@ var PropertiesBuilder = function(properties) {
 			for (var i = 1; i < names.length; i++) {
 				value = value[names[i]];
 			}
-			properties[name].control.val(value);
+			if (properties[name].control.is("select")) {
+				properties[name].control.children('option[value="' + value + '"]')
+				.attr("selected", "selected");
+			} else {
+				properties[name].control.val(value);
+			}
 		},
 		setPropertyValues : function(model) {
 			for (var key in properties) {

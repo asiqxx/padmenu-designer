@@ -40,6 +40,16 @@ var ImageWsItemFactory = function() {
 				self.uber('render', view);
 				view.fire('render');
 			};
+			imageObject.onerror = function() {
+				var defaultImageObject = new Image();
+				defaultImageObject.src =
+					'public/images/peace_love_music_128x128.png';
+				defaultImageObject.onload = function() {
+					render(view, model, defaultImageObject);
+					self.uber('render', view);
+					view.fire('render');
+				};
+			};
 			imageObject.src = model.config.src;
 		}
 	};
@@ -56,7 +66,9 @@ var ImageWsItemFactory = function() {
 				0, 10000, 1);
 		PropertiesBuilder(properties)
 			.addNumberProperty('config.h', 'Image Height', onChange,
-				0, 10000, 1);
+				0, 10000, 1)
+		PropertiesBuilder(properties)
+			.addStringProperty('config.src', 'Image Src', onChange);
 		return properties;
 	};
 };

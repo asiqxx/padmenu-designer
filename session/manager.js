@@ -28,8 +28,6 @@ var SessionManager = function() {
 				JSON.stringify(stateIndex));
 			sessionStorage.setItem('pd.session.states.' + ns,
 				JSON.stringify(states));
-				
-			fireStoreEvent(ns, stateIndex);
 		}, 250);
 	};
 	self.restore = function(ns, offset) {
@@ -67,8 +65,6 @@ var SessionManager = function() {
 		var state = $.extend(true, {}, states[stateIndex]);
 		
 		sessionStorage.setItem('pd.session.index.' + ns, stateIndex);
-		
-		fireRestoreEvent(ns, state);
 		
 		return state;
 	};

@@ -126,8 +126,8 @@
 			if (typeof elementOptions.dragObject == 'function') {
 				$dragObject = elementOptions.dragObject();
 				pointerOffset = {
-					left : $dragObject.width(),
-					top : $dragObject.height()
+					left : $dragObject.width() / 2,
+					top : $dragObject.height() / 2
 				};
 			} else {
 				$dragObject = $element.clone(true, true);

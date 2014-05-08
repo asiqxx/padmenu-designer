@@ -58,6 +58,7 @@ var WsTemplateController = function($viewContainer) {
 			switch (e.which) {
 			case 27:
 				self.close();
+				self.blur(true);
 				return false;
 			default:
 				break;
@@ -108,6 +109,7 @@ var WsTemplateController = function($viewContainer) {
 				return false;
 			}
 			self.close();
+			self.blur(true);
 		},
 		onSelectedItemViewClick : function(data) {
 			if (data.evt.which !== 1) {
@@ -116,6 +118,7 @@ var WsTemplateController = function($viewContainer) {
 			self.stopClickEventPropagation();
 		},
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
+		onSelectedItemViewResizerDragMove : self.onSelectedItemViewResizerDragMove.bind(self),
 		onPageIViewMousedown : function(data) {
 			if (self.getEditor() !== null) {
 				return;
@@ -173,14 +176,17 @@ var WsTemplateController = function($viewContainer) {
 	});
 	
 	$(window).on('resize.pdWsTemplateController', self.onWindowResize);
+	$viewContainer.on('mousewheel.pdWsController', self.onMousewheel);
 	$(window).on('keydown.pdWsTemplateController', eventListener.onKeydown);
-	$(document.body).on('mousedown.pdWsTemplateController', self.onBodyMousdown);
+	$(document.body).on('mousedown.pdWsTemplateController', self.onBodyMousedown);
 	$viewContainer.on('dblclick.pdWsTemplateController',
 		eventListener.onViewContainerDblClick);
 	self.getPageIView().on('click.pdWsTemplateController',
 		self.onPageIViewClick);
 	self.getSelectedItemView().on('dblclick.pdWsTemplateController',
 		eventListener.onSelectedItemViewDblClick);
+	self.getSelectedItemView().find('.resizer').on('dragmove.pdWsTemplateController',
+		eventListener.onSelectedItemViewResizerDragMove);
 	self.getPageIView().on('mousedown.pdWsTemplateController',
 		eventListener.onPageIViewMousedown);
 	self.getPageIView().on('mousemove.pdWsTemplateController',
@@ -194,7 +200,7 @@ var WsTemplateController = function($viewContainer) {
 	
 	self.open = function(template) {
 		if (model) {
-			self.close();
+			self.close(false);
 		}
 		model = template;
 		if (!model.items) {
@@ -205,11 +211,6 @@ var WsTemplateController = function($viewContainer) {
 			height : model.height
 		});
 		self.setBgColor(model.bgColor);
-		if (self.isFocused()) {
-			self.updateViewGeometry();
-		} else {
-			self.focus();
-		}
 		self.render();
 	};
 	
@@ -241,7 +242,6 @@ var WsTemplateController = function($viewContainer) {
 		}
 		model = null;
 		self.render();
-		self.blur(true);
 	};
 	
 	self.updateSelectedItem = function(update) {

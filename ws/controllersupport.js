@@ -24,7 +24,8 @@ var WsControllerSupport = function() {
 		return pageIView;
 	};
 
-	var scale = 0;
+	var pageMargin = 20;
+	var scale = 1;
 	self.getScale = function() {
 		return scale;
 	};
@@ -135,7 +136,12 @@ var WsControllerSupport = function() {
 			var itemView = self.getItemView(item);
 			selectedItemView.setPosition(itemView.getPosition());
 			selectedItemView.setSize(itemView.getSize());
-			selectedItemView.getChildren().setSize(itemView.getSize());
+			selectedItemView.find('.selection').setSize(itemView.getSize());
+			selectedItemView.find('.editor').setSize(itemView.getSize());
+			selectedItemView.find('.resizer').setPosition({
+				x : itemView.getWidth(),
+				y : itemView.getHeight()
+			});
 			selectedItemView.setVisible(true);
 		}
 		if (item !== selectedItem) {
@@ -164,6 +170,7 @@ var WsControllerSupport = function() {
 		if (editor === null) {
 			return null;
 		}
+		editor.setAttr('name', 'editor');
 		editor.setSize(selectedItemView.getSize());
 		selectedItemView.add(editor);
 		editor.fire('create');
@@ -183,11 +190,29 @@ var WsControllerSupport = function() {
 	};
 	
 	self.setBgColor = function(color) {
-		var pageBg = pageBgView.find('.bgColor');
+		var pageBg = pageBgView.find('.bg');
 		pageBg.fill(color);
 		var placeholderItemViewBgColor = tinycolor(color);
 		placeholderItemViewBgColor.setAlpha(0.625);
 		placeholderItemView.fill(placeholderItemViewBgColor.toRgbString());
+		pageBgView.draw();
+	};
+	self.setBgImage = function(src) {
+		var pageBg = pageBgView.find('.bg');
+		var imageObject = new Image();
+		imageObject.onload = function() {
+			pageBg.setImage(imageObject);
+			pageBgView.draw();
+		};
+		imageObject.onerror = function() {
+			pageBg.setImage(null);
+			pageBgView.draw();
+		};
+		imageObject.src = src;
+	};
+	self.setOpacity = function(opacity) {
+		var pageBg = pageBgView.find('.bg');
+		pageBg.setOpacity(opacity);
 		pageBgView.draw();
 	};
 	
@@ -231,6 +256,41 @@ var WsControllerSupport = function() {
 			self.updateViewGeometry();
 		}, 250);
 	};
+	self.onMousewheel = function(e) {
+		var pageMargin = 20;
+		var size = self.getPageView().getSize();
+		var position = self.getPageView().getPosition();
+		var newPosition = null;
+		if (e.shiftKey) {
+			var scrollK = 0.1 * size.width;
+			newPosition = {
+				x : position.x + scrollK * e.deltaX,
+				y : position.y
+			};
+		} else {
+			var scrollK = 0.1 * size.height;
+			newPosition = {
+				x : position.x,
+				y : position.y + scrollK * e.deltaY
+			};
+		}
+		var safeScale = scale === 0 ? 1 : scale;
+		if (newPosition.x > pageMargin
+			|| newPosition.x + pageView.getWidth() * safeScale
+				+ pageMargin
+			< view.getWidth()) {
+			newPosition.x = pageView.getPosition().x;
+		}
+		if (newPosition.y > pageMargin
+			|| newPosition.y + pageView.getHeight() * safeScale
+				+ pageMargin
+			< view.getHeight()) {
+			newPosition.y = pageView.getPosition().y;
+		}
+		self.setPagePosition(newPosition);
+		
+		view.draw();
+	};
 	self.onKeydown = function(e) {
 		if (!self.isFocused()) {
 			return true;
@@ -257,7 +317,7 @@ var WsControllerSupport = function() {
 		}
 		return true;
 	};
-	self.onBodyMousdown = function(e) {
+	self.onBodyMousedown = function(e) {
 		if (!self.isFocused()) {
 			return true;
 		}
@@ -285,8 +345,29 @@ var WsControllerSupport = function() {
 		self.createEditor(this.updateSelectedItem);
 		self.stopDblClickEventPropagation();
 	};
+	self.onSelectedItemViewResizerDragMove = function(data) {
+		var startPosition = data.target.getAttr('startPosition');
+		var size = data.target.getAttr('startSize');
+		var position = {
+			x : data.evt.pageX,
+			y : data.evt.pageY,
+		};
+		var offset = {
+			x : position.x - startPosition.x,
+			y : position.y - startPosition.y
+		};
+		var itemSize = {
+			w : size.width + offset.x,
+			h : size.height + offset.y,
+		};
+		if (data.evt.shiftKey) {
+			itemSize.h = size.height / (size.width / itemSize.w);
+		}
+		if (itemSize.w > 0 && itemSize.h > 0) { 
+			this.updateSelectedItem(itemSize);
+		}
+	};
 	
-	var pageMargin = 20;
 	self.createView = function($container) {
 		$viewContainer = $container;
 		$viewContainer.addClass('pd-ws');
@@ -344,9 +425,9 @@ var WsControllerSupport = function() {
 		pageView.setZIndex(1);
 		// Create PageBgView.
 		pageBgView = new Kinetic.Layer();
-		pageBgView.add(new Kinetic.Rect({
-			name : 'bgColor',
-			stroke : 'black',
+		pageBgView.add(new Kinetic.Image({
+			name : 'bg',
+			stroke : '#222',
 			strokeWidth : 1,
 		}));
 		view.add(pageBgView);
@@ -364,7 +445,37 @@ var WsControllerSupport = function() {
 			stroke : 'red',
 			strokeWidth : 1.5
 		}));
+		
+		var selectedItemViewResizer = new Kinetic.Circle({
+			name : 'resizer',
+			radius : 5,
+			fill : 'white',
+			stroke : 'red',
+			strokeWidth : 1.5,
+			draggable : true
+		});
+		selectedItemView.add(selectedItemViewResizer);
+		selectedItemViewResizer.on('mousedown', function(data) {
+			this.setAttr('startPosition', {
+				x : data.evt.pageX,
+				y : data.evt.pageY,
+			});
+			this.setAttr('startSize', {
+				width : self.getSelectedItem().w,
+				height : self.getSelectedItem().h
+			});
+			
+			data.cancelBubble = true;
+		});
+		selectedItemViewResizer.on('mouseup', function(data) {
+			this.setAttr('startPosition', null);
+			this.setAttr('startSize', null);
+			data.cancelBubble = true;
+		});
+		
 		pageIViewPageView.add(selectedItemView);
+		selectedItemView.setVisible(false);
+		
 		placeholderItemView = new Kinetic.Rect({
 			name : 'placeholderItemView',
 			stroke : 'red',

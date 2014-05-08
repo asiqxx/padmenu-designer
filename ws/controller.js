@@ -8,6 +8,7 @@ var WsController = function($viewContainer, model, theme) {
 	var reneredItems = [];
 	var eventListener = {
 		onSelectedItemViewDblClick : self.onSelectedItemViewDblClick.bind(self),
+		onSelectedItemViewResizerDragMove : self.onSelectedItemViewResizerDragMove.bind(self),
 		onKeydown : function(e) {
 			if (!self.onKeydown(e)) {
 				return false;
@@ -135,11 +136,14 @@ var WsController = function($viewContainer, model, theme) {
 		move : eventListener.onDropMove
 	});
 	$(window).on('resize.pdWsController', self.onWindowResize);
+	$viewContainer.on('mousewheel.pdWsController', self.onMousewheel);
 	$(window).on('keydown.pdWsController', eventListener.onKeydown);
-	$(document.body).on('mousedown.pdWsController', self.onBodyMousdown);
+	$(document.body).on('mousedown.pdWsController', self.onBodyMousedown);
 	self.getPageIView().on('click.pdWsController', self.onPageIViewClick);
 	self.getSelectedItemView().on('dblclick.pdWsTemplateController',
 		eventListener.onSelectedItemViewDblClick);
+	self.getSelectedItemView().find('.resizer').on('dragmove.pdWsTemplateController',
+		eventListener.onSelectedItemViewResizerDragMove);
 	model.addChangeEventListener(modelEventListener);
 	model.addPagesChangeEventListener(modelEventListener);
 	
@@ -426,6 +430,7 @@ var WsController = function($viewContainer, model, theme) {
 		height : model.getHeight()
 	});
 	self.setBgColor(theme.bgColor);
+	self.setBgImage(theme.bgImage);
 	self.render(0);
 };
 
