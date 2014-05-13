@@ -87,8 +87,3 @@ Object.findById = function(objects, id) {
 	}
 	return null;
 };
-
-function throwException(message) {
-	alert(message);
-	throw message;
-}

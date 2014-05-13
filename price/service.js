@@ -86,6 +86,6 @@ var PriceService = function($container, source) {
 	}
 	
 	self.get = function(id) {
-		return find(source, id);
+		return typeof id === 'undefined' ? source : find(source, id);
 	};
 };

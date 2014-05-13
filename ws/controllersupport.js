@@ -210,6 +210,11 @@ var WsControllerSupport = function() {
 		};
 		imageObject.src = src;
 	};
+	self.setBgOpacity = function(opacity) {
+		var pageBg = pageBgView.find('.bg');
+		pageBg.setOpacity(opacity);
+		pageBgView.draw();
+	};
 	self.setOpacity = function(opacity) {
 		var pageBg = pageBgView.find('.bg');
 		pageBg.setOpacity(opacity);

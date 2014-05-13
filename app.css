@@ -271,6 +271,65 @@
 	content: "+";
 }
 
+.notification {
+	position: absolute;
+	top: 40px;
+	width: 30em;
+	left: 50%;
+	margin-left: -15em;
+}
+
+.notification>div {
+	display: none;
+	background-color: rgba(32, 32, 32, 0.75);
+	border: 1px solid #000;
+	-webkit-box-shadow: 0px 0px 4px 1px #181818;
+    -moz-box-shadow: 0px 0px 4px 1px #181818;
+    box-shadow: 0px 0px 4px 1px #181818;
+	font-size: 1em;
+	font-weight: bold;
+	line-height: 2em;
+	width: 100%;
+	height: auto;
+	margin: 4px 0;
+	padding: 0 1em;
+}
+.notification .notification-info {
+	color: #9C9;
+}
+.notification .notification-warn {
+	color: #FC8;
+}
+.notification .notification-error {
+	color: #D44;
+}
+.notification-loading {
+	background-color: #222;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: auto;
+	text-align: center;
+	padding-top: 4em;
+	margin: 0;
+}
+.notification-loading>div {
+	position: absolute;
+	top: 33%;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: inherit;
+	border: 0;
+	-webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    text-align: center;
+    font-size: 2em;
+}
+
 .rasta .rasta-color-green {
 	color : #9C9 !important;
 }

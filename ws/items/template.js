@@ -18,12 +18,13 @@ var TemplateWsItemFactory = function() {
 		});
 		$(window).triggerHandler(event);
 		model.meta.template = event.template;
-		if (model.meta.template) {
+		if (typeof model.meta.template === 'object') {
 			if (typeof model.meta.template === 'object'
 				&& model.meta.template !== null) {
 				model.w = model.meta.template.width;
 				model.h = model.meta.template.height;
 				model.bg = model.meta.template.bgColor;
+				model.bgOpacity = model.meta.template.bgOpacity;
 			}
 		}
 		var event = $.Event('message', {
@@ -38,8 +39,9 @@ var TemplateWsItemFactory = function() {
 		var self = this;
 		var model = view.getAttr('model');
 		model.config.items = [];
-		if (model.meta.template) {			
+		if (typeof model.meta.template === 'object') {
 			var renderedItemCount = 0;
+			var itemCount = model.meta.template.items.length;
 			var offsets = [];
 			for (var i = 0; i < model.meta.template.items.length; i++) {
 				var itemModel = {};
@@ -98,9 +100,8 @@ var TemplateWsItemFactory = function() {
 				var wsItemFactory = WsItemFactory.forType(itemModel.type);
 				var itemView = wsItemFactory.createView(itemModel);
 				itemView.on('render', function() {
-					if (++renderedItemCount
-						=== model.meta.template.items.length) {
-						// fire render event if necessary
+					if (++renderedItemCount === itemCount) {
+						view.fire('render');
 					}
 				});
 				wsItemFactory.render(itemView);
@@ -124,7 +125,6 @@ var TemplateWsItemFactory = function() {
 		}
 		delete model.meta;
 		self.uber('render', view);
-		view.fire('render');
 	};
 	this.createProperties = function(onChange) {
 		var properties = this.uber('createProperties', onChange);

@@ -147,6 +147,26 @@ var WsController = function($viewContainer, model, theme) {
 	model.addChangeEventListener(modelEventListener);
 	model.addPagesChangeEventListener(modelEventListener);
 	
+	self.setBgColor = function(bgColor) {
+		model.get().bgColor = bgColor;
+		self.uber('setBgColor', bgColor);
+		$(window).triggerHandler($.Event('message', {
+			id : 'store',
+			ns : 'wscontroller',
+			state : model.get()
+		}));
+	};
+	self.setBgImage = function(bgImage) {
+		model.get().bgImage = bgImage;
+		model.get().bg = bgImage;
+		self.uber('setBgImage', bgImage);
+		$(window).triggerHandler($.Event('message', {
+			id : 'store',
+			ns : 'wscontroller',
+			state : model.get()
+		}));
+	};
+	
 	var startDrag = false;
 	var draggingItemView = null;
 	self.getPageIView().on('mousedown.pdWsController', function(data) {
@@ -208,6 +228,11 @@ var WsController = function($viewContainer, model, theme) {
 		self.selectItem(self.getPlaceholderItem());
 		self.setPlaceholderItem();
 		self.getPageView().draw();
+		$(window).triggerHandler($.Event('message', {
+			id : 'store',
+			ns : 'wscontroller',
+			state : model.get()
+		}));
 	});
 	self.onPageSelect = function(selectedPage) {
 		if (selectedPage >= 0 && selectedPage < model.get().pages.length) {
@@ -431,7 +456,6 @@ var WsController = function($viewContainer, model, theme) {
 	});
 	self.setBgColor(theme.bgColor);
 	self.setBgImage(theme.bgImage);
-	self.render(0);
 };
 
 WsController.inherits(WsControllerSupport);
