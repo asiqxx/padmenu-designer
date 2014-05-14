@@ -40,6 +40,14 @@ var PropertyBrowser = function($viewContainer) {
 			control.addClass('pd-property-control ' + classes[++i % 3]);
 			$property.append(control);
 			$viewContainer.append($property);
+			if (control.hasClass('ws-property-control-color')) {
+				control.minicolors({
+					position : 'bottom right',
+					opacity : true
+				}).css({
+					'padding' : 0
+				});
+			}
 		}
 		var $controls = $viewContainer.children()
 			.children('.pd-property-control');
@@ -81,7 +89,7 @@ var PropertiesBuilder = function(properties) {
 			return this;
 		},
 		addStringsProperty : function(name, label, onChange, strings) {
-			var $control = $('<select type="color">');
+			var $control = $('<select/>');
 			for (var key in strings) {
 				var option = new Option(key, strings[key]);
 				$control.append(option);
@@ -138,7 +146,7 @@ var PropertiesBuilder = function(properties) {
 			return this;
 		},
 		addColorProperty : function(name, label, onChange) {
-			var $control = $('<input type="color">');
+			var $control = $('<span type="text" class="ws-property-control-color">&nbsp</span>');
 			if (onChange) {
 				$control.on('change', function() {
 					onChange(createUpdateObject(name, $(this).val()));
@@ -162,7 +170,7 @@ var PropertiesBuilder = function(properties) {
 			}
 			if (properties[name].control.is("select")) {
 				properties[name].control.children('option[value="' + value + '"]')
-				.attr("selected", "selected");
+					.attr("selected", "selected");
 			} else {
 				properties[name].control.val(value);
 			}

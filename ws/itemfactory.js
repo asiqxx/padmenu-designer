@@ -9,7 +9,6 @@ var WsItemFactory = function() {
 			w : 0,
 			h : 0,
 			bg : 'transparent',
-			bgOpacity : 1,
 			color : '#000000',
 			borderColor : 'transparent',
 			borderWidth : 0,
@@ -36,7 +35,6 @@ var WsItemFactory = function() {
 			width : view.getWidth(),
 			height : view.getHeight(),
 			fill : model.bg,
-			opacity : model.bgOpacity,
 			stroke : model.borderColor,
 			strokeWidth : model.borderWidth
 		});
@@ -57,19 +55,18 @@ var WsItemFactory = function() {
 	this.createProperties = function(onChange) {
 		var properties = {};
 		PropertiesBuilder(properties)
-		.addNumberProperty('p', 'Page')
-		.addNumberProperty('i', 'Index')
-		.addNumberProperty('x', 'X', onChange, 0, 10000, 1)
-		.addNumberProperty('y', 'Y', onChange, 0, 10000, 1)
-		.addNumberProperty('w', 'Width', onChange, 0, 10000, 1)
-		.addNumberProperty('h', 'Height', onChange, 0, 10000, 1)
-		.addColorProperty('bg', 'Bg Color', onChange)
-		.addNumberProperty('bgOpacity', 'Bg Opacity', onChange, 0, 1, 0.1)
-		.addColorProperty('color', 'Color', onChange)
-		.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1)
-		.addNumberProperty('zIndex', 'ZIndex', onChange, -127, 127, 1)
-		.addStringProperty('action', 'Action', onChange)
-		.addStringProperty('anchor', 'Anchor', onChange);
+			.addNumberProperty('p', 'Page')
+			.addNumberProperty('i', 'Index')
+			.addNumberProperty('x', 'X', onChange, 0, 10000, 1)
+			.addNumberProperty('y', 'Y', onChange, 0, 10000, 1)
+			.addNumberProperty('w', 'Width', onChange, 0, 10000, 1)
+			.addNumberProperty('h', 'Height', onChange, 0, 10000, 1)
+			.addColorProperty('bg', 'Bg Color', onChange)
+			.addColorProperty('color', 'Color', onChange)
+			.addNumberProperty('opacity', 'Opacity', onChange, 0, 1, 0.1)
+			.addNumberProperty('zIndex', 'ZIndex', onChange, -127, 127, 1)
+			.addStringProperty('action', 'Action', onChange)
+			.addStringProperty('anchor', 'Anchor', onChange);
 		return properties;
 	};
 	this.createEditor = function(model, onChange) {

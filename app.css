@@ -224,6 +224,19 @@
 .pd-property-control[type=color] {
 	padding: 0.2em 0.4em;
 }
+.minicolors-theme-default .minicolors-swatch {
+	top: 0px;
+	left: 0px !important;
+	width: 100%;
+	height: 100%;
+}
+.minicolors-theme-default.minicolors {
+	width: 50%;
+}
+.minicolors-theme-default.minicolors .pd-property-control{
+	width: 100%;
+	background-color: transparent;
+}
 
 .pd-price-service {
 	background-color: #222;

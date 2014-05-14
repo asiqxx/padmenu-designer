@@ -25,10 +25,13 @@ var WsTemplateController = function($viewContainer) {
 			self.selectItem(item);
 			self.fireSelectEvent(item);
 		});
+		return itemView;
 	}
 	function addItem(item) {
+		item.zIndex = model.items.length === 0
+			? 0 : ++model.items[model.items.length - 1].zIndex;
 		model.items.push(item);
-		renderItem(item);
+		var itemView = renderItem(item);
 		pageView.batchDraw();
 	}
 	function removeItem(item) {

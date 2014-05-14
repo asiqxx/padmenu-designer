@@ -12,16 +12,16 @@ var Logger = function(duration) {
 	function notify(level, message) {
 		var $view = $('<div class="notification-' + level + '">'
 			+ message + '</div>').appendTo($container);
-		var $emoticon = $('<span class="icon-icomoon-smiley2"/>');
-		if (level === 'info') {
-			$emoticon = $('<span class="icon-icomoon-smiley2"/>');
-		} else if (level === 'warn') {
-			$emoticon = $('<span class="icon-icomoon-confused2"/>');
-		} else if (level === 'error') {
-			$emoticon = $('<span class="icon-icomoon-evil2"/>');
-		}
-		$view.prepend('&nbsp;&nbsp;&nbsp;&nbsp;');
-		$view.prepend($emoticon);
+		//var $emoticon = $('<span class="icon-icomoon-smiley2"/>');
+		//if (level === 'info') {
+			//$emoticon = $('<span class="icon-icomoon-smiley2"/>');
+		//} else if (level === 'warn') {
+			//$emoticon = $('<span class="icon-icomoon-confused2"/>');
+		//} else if (level === 'error') {
+			//$emoticon = $('<span class="icon-icomoon-evil2"/>');
+		//}
+		//$view.prepend('&nbsp;&nbsp;&nbsp;&nbsp;');
+		//$view.prepend($emoticon);
 		$view.slideDown(duration);
 		setTimeout(function() {
 			$view.slideUp(duration, function() {
@@ -154,7 +154,6 @@ jQuery(document).ready(function($) {
 							width : template.width,
 							height : template.height,
 							bgColor : template.bgColor,
-							bgOpacity : template.bgOpacity,
 						});
 				}
 				var themeManagerEventListener = {
@@ -224,40 +223,11 @@ jQuery(document).ready(function($) {
 							}		
 							themeManager.setTemplates(templates);
 							onLoad();
-							Logger(0).info('Creating details...');
-							setTimeout(function() {
-								var detailTemplate = themeManager.getTemplate('detail');
-								var price = priceService.get();
-								var menu = wsModel.get();
-								menu.details = {};
-								function createDetails(destination, source) {
-									for (var key in source) {
-										if (typeof source[key] === 'object') {
-											if (typeof source[key].media === 'undefined') {
-												createDetails(destination, source[key]);
-											} else {
-												var model = {
-													config : {
-														template : 'detail',
-														price : key
-													}
-												};
-												var wsItemFactory = WsItemFactory.forType('template');
-												var view = wsItemFactory.createView(model);
-												wsItemFactory.render(view);
-												destination[key] = model;
-											}
-										}
-									}
-								}
-								createDetails(menu.details, price);
-								Logger(0).info('Details created.');
-								Logger(0).info('');
-								setTimeout(function() {
-									$notificationLoading.remove();
-								}, 1000);
-							}, 1000);
 							Logger(0).info('Theme templates loaded.');
+							Logger(0).info('');
+							setTimeout(function() {
+								$notificationLoading.remove();
+							}, 1000);
 						});
 					}
 				};
@@ -437,10 +407,6 @@ jQuery(document).ready(function($) {
 						wsTemplateController.getModel().bgColor =
 							update.bgColor;
 						wsTemplateController.setBgColor(update.bgColor);
-					} else if (typeof update.bgOpacity === 'number') {
-						wsTemplateController.getModel().bgOpacity =
-							update.bgOpacity;
-						wsTemplateController.setBgOpacity(update.bgOpacity);
 					}
 				}
 				PropertiesBuilder(wsTemplateControllerProperties)
@@ -451,10 +417,9 @@ jQuery(document).ready(function($) {
 					.addNumberProperty('height', 'Height',
 						onWsTemplateControllerPropertyChange)
 					.addColorProperty('bgColor', 'Bg Color',
-						onWsTemplateControllerPropertyChange)
-					.addNumberProperty('bgOpacity', 'Bg Opacity',
-							onWsTemplateControllerPropertyChange, 0, 1, 0.1);
+						onWsTemplateControllerPropertyChange);
 				var wsTemplateControllerEventListener = {
+					createDetailsTimerId : 0,
 					onChange : function(template) {
 						Logger().info('Save template...');
 						if (template.id) {
@@ -479,6 +444,37 @@ jQuery(document).ready(function($) {
 									Logger().info('Template saved.');
 								}
 							});
+						}
+						if (template.name === 'detail') {
+							Logger(0).info('Saving details...');
+							wsTemplateControllerEventListener.createDetailsTimerId = setTimeout(function() {
+								var detailTemplate = themeManager.getTemplate('detail');
+								var price = priceService.get();
+								var menu = wsModel.get();
+								menu.details = {};
+								function createDetails(destination, source) {
+									for (var key in source) {
+										if (typeof source[key] === 'object') {
+											if (typeof source[key].media === 'undefined') {
+												createDetails(destination, source[key]);
+											} else {
+												var model = {
+													config : {
+														template : 'detail',
+														price : key
+													}
+												};
+												var wsItemFactory = WsItemFactory.forType('template');
+												var view = wsItemFactory.createView(model);
+												wsItemFactory.render(view);
+												destination[key] = model;
+											}
+										}
+									}
+								}
+								createDetails(menu.details, price);
+								Logger(0).info('Details saved.');
+							}, 1000);
 						}
 						wsController.updateItems(wsModel.find({
 							type : 'template',
